@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart QR City | Vinnytsia</title>
+<title>Smart QR City</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/html5-qrcode"></script>
@@ -21,21 +21,15 @@ body{
     background:linear-gradient(135deg,#1d4ed8,#2563eb);
 }
 
-.header h2{margin:0;font-size:20px;}
-.header p{margin:5px 0 0;opacity:0.8;font-size:13px;}
-
-/* CARD */
 .card{
     max-width:520px;
     margin:12px auto;
     background:rgba(255,255,255,0.06);
-    border:1px solid rgba(255,255,255,0.08);
-    padding:12px;
     border-radius:14px;
-    backdrop-filter: blur(8px);
+    padding:14px;
+    border:1px solid rgba(255,255,255,0.08);
 }
 
-/* BUTTON */
 button{
     width:100%;
     padding:12px;
@@ -44,60 +38,30 @@ button{
     background:#22c55e;
     color:white;
     font-size:15px;
-    cursor:pointer;
 }
 
-button:hover{
-    background:#16a34a;
-}
-
-/* RESULT CARD */
-.result{
-    padding:12px;
-    background:rgba(255,255,255,0.08);
+#map{
+    height:300px;
     border-radius:12px;
-    transition:0.3s;
+}
+
+/* QR */
+#scanner{
+    display:none;
+    margin-top:10px;
+}
+
+/* RESULT */
+.result{
+    padding:14px;
+    border-radius:12px;
+    background:rgba(255,255,255,0.08);
     animation:fade 0.3s ease-in-out;
 }
 
 @keyframes fade{
-    from{opacity:0; transform:translateY(5px);}
+    from{opacity:0; transform:translateY(10px);}
     to{opacity:1; transform:translateY(0);}
-}
-
-/* MAP */
-#map{
-    height:340px;
-    border-radius:12px;
-}
-
-/* LIST */
-.item{
-    padding:10px;
-    margin-top:6px;
-    background:rgba(255,255,255,0.05);
-    border-radius:10px;
-    cursor:pointer;
-    transition:0.2s;
-}
-.item:hover{
-    background:rgba(255,255,255,0.12);
-    transform:scale(1.02);
-}
-
-/* SEARCH */
-input{
-    width:100%;
-    padding:10px;
-    border-radius:10px;
-    border:none;
-    margin-top:8px;
-}
-
-/* SCANNER */
-#scanner{
-    display:none;
-    margin-top:10px;
 }
 
 /* BADGE */
@@ -108,6 +72,15 @@ input{
     border-radius:8px;
     font-size:12px;
 }
+
+/* IMPACT */
+.impact{
+    margin-top:10px;
+    padding:10px;
+    border-radius:10px;
+    background:rgba(34,197,94,0.15);
+    border:1px solid rgba(34,197,94,0.3);
+}
 </style>
 </head>
 
@@ -115,113 +88,107 @@ input{
 
 <div class="header">
     <h2>🏛️ Smart QR City</h2>
-    <p>Вінниця — цифрова карта міської інфраструктури</p>
+    <p>Наведи камеру → отримай повну історію об’єкта</p>
 </div>
 
-<!-- 📷 QR -->
+<!-- QR -->
 <div class="card">
-    <button onclick="toggleScanner()">📷 Сканувати QR</button>
+    <button onclick="toggleQR()">📷 Сканувати QR</button>
     <div id="scanner"></div>
 </div>
 
-<!-- 📍 RESULT -->
+<!-- RESULT -->
 <div class="card">
     <div id="result" class="result">
-        🔎 Наведіть QR або виберіть об’єкт на карті
+        🔎 Наведіть QR-код на об’єкт міської інфраструктури
     </div>
 </div>
 
-<!-- 🔍 SEARCH -->
-<div class="card">
-    <input id="search" placeholder="Пошук об’єкта..." oninput="filterList()">
-</div>
-
-<!-- 🗺️ MAP -->
+<!-- MAP -->
 <div class="card">
     <div id="map"></div>
-</div>
-
-<!-- 📍 LIST -->
-<div class="card">
-    <h3>📍 Об’єкти міста</h3>
-    <div id="list"></div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
 
-// 🧠 ДАНІ (багато міток — як реальне місто)
+// 🧠 ОБ’ЄКТИ (без списків, тільки логіка)
 const data = {
-    bench_01:{name:"🪑 Лавка парк",info:"Центральний парк",coords:[49.2331,28.4682]},
-    bench_02:{name:"🪑 Лавка сквер",info:"Сквер Козицького",coords:[49.2340,28.4690]},
-    trash_01:{name:"🗑️ Смітник центр",info:"Центр міста",coords:[49.2325,28.4660]},
-    trash_02:{name:"🗑️ Смітник парк",info:"Парк зона",coords:[49.2350,28.4700]},
-    stop_01:{name:"🚌 Зупинка центр",info:"Головна зупинка",coords:[49.2335,28.4685]},
-    stop_02:{name:"🚌 Зупинка схід",info:"Східний район",coords:[49.2360,28.4720]},
-    stop_03:{name:"🚌 Зупинка захід",info:"Західний район",coords:[49.2315,28.4635]},
-    light_01:{name:"💡 Освітлення вул. Соборна",info:"Вуличне світло",coords:[49.2345,28.4675]},
-    park_01:{name:"🌳 Парк зона",info:"Зелена зона міста",coords:[49.2305,28.4695]}
+    bench_01:{
+        name:"🪑 Лавка у парку",
+        type:"Благоустрій",
+        story:"Встановлена у 2024 році для покращення громадського простору.",
+        impact:"Підвищує комфорт мешканців та соціальну взаємодію.",
+        coords:[49.2331,28.4682]
+    },
+
+    trash_01:{
+        name:"🗑️ Міський смітник",
+        type:"Комунальна інфраструктура",
+        story:"Елемент системи чистоти міста, регулярне оновлення кожні 5 років.",
+        impact:"Зменшує забруднення міського простору.",
+        coords:[49.2320,28.4660]
+    },
+
+    stop_01:{
+        name:"🚌 Автобусна зупинка",
+        type:"Транспорт",
+        story:"Забезпечує доступ до громадського транспорту у густонаселеному районі.",
+        impact:"Покращує мобільність мешканців міста.",
+        coords:[49.2340,28.4700]
+    },
+
+    light_01:{
+        name:"💡 Вуличне освітлення",
+        type:"Інфраструктура",
+        story:"Система нічного освітлення головних вулиць міста.",
+        impact:"Підвищує безпеку в темний час доби.",
+        coords:[49.2350,28.4660]
+    }
 };
 
-// 📍 SHOW OBJECT
+// 📍 SHOW OBJECT (ГОЛОВНА ФІШКА)
 function show(id){
     let o=data[id];
 
     document.getElementById("result").innerHTML=`
-        <div class="badge">${o.name}</div><br><br>
-        📍 ${o.info}
+        <div class="badge">${o.type}</div>
+        <h3>${o.name}</h3>
+
+        📖 <b>Історія об’єкта:</b><br>
+        ${o.story}<br><br>
+
+        🌍 <b>Вплив на громаду:</b><br>
+        ${o.impact}
+
+        <div class="impact">
+            💡 Цей об’єкт є частиною міської інфраструктури та відображає принцип прозорості міста.
+        </div>
     `;
 }
 
-// 🗺️ MAP CENTER VINNYTSIA
+// 🗺️ MAP (Вінниця центр)
 let map=L.map('map').setView([49.2331,28.4682],14);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
     attribution:''
 }).addTo(map);
 
-// 📍 MANY MARKERS
+// 📍 MARKERS
 for(let id in data){
-    let o=data[id];
+    let m=data[id];
 
-    let marker=L.marker(o.coords).addTo(map);
-
-    marker.bindPopup(o.name);
-
+    let marker=L.marker(m.coords).addTo(map);
+    marker.bindPopup(m.name);
     marker.on("click",()=>show(id));
 }
 
-// 📍 LIST
-let list=document.getElementById("list");
-
-function renderList(filter=""){
-    list.innerHTML="";
-
-    for(let id in data){
-        if(data[id].name.toLowerCase().includes(filter.toLowerCase())){
-            let div=document.createElement("div");
-            div.className="item";
-            div.innerText=data[id].name;
-            div.onclick=()=>show(id);
-            list.appendChild(div);
-        }
-    }
-}
-
-renderList();
-
-// 🔍 SEARCH
-function filterList(){
-    let val=document.getElementById("search").value;
-    renderList(val);
-}
-
-// 📷 QR SCANNER (toggle)
+// 📷 QR SCANNER
 let scanner;
 let active=false;
 
-function toggleScanner(){
+function toggleQR(){
 
     let box=document.getElementById("scanner");
 
@@ -244,9 +211,9 @@ function toggleScanner(){
                 show(text);
             } else {
                 document.getElementById("result").innerHTML=
-                "❌ QR не знайдено в системі";
+                "❌ QR-код не знайдено в системі";
             }
-            toggleScanner();
+            toggleQR();
         }
     );
 
