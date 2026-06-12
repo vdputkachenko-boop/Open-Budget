@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart QR City</title>
+<title>Smart QR City PRO</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/html5-qrcode"></script>
@@ -27,7 +27,6 @@ body{
     background:rgba(255,255,255,0.06);
     border-radius:14px;
     padding:14px;
-    border:1px solid rgba(255,255,255,0.08);
 }
 
 .home{
@@ -87,9 +86,8 @@ button{
 
 <div class="card">
     <div class="home">
-        📲 Система міської інфраструктури на базі QR-кодів<br>
-        Наведіть камеру або натисніть об’єкт на карті.<br>
-        Ви бачите реальну вартість кожного елемента міста.
+        📲 QR → об’єкт міста → вартість + структура витрат<br>
+        Скануйте або виберіть на карті
     </div>
 </div>
 
@@ -112,7 +110,7 @@ button{
 
 <script>
 
-// 🧠 ПОВНА БАЗА ОБ’ЄКТІВ
+// 🧠 БАЗА ДАНИХ
 const data = {
 
     bench_01:{
@@ -160,7 +158,22 @@ const data = {
     }
 };
 
-// 📊 ВІДОБРАЖЕННЯ ДАНИХ
+// 🧠 ВИТЯГ ID З БУДЬ-ЯКОГО QR
+function extractID(text){
+    if(!text) return null;
+
+    text = text.trim();
+
+    // якщо це URL → беремо останній сегмент
+    if(text.includes("http")){
+        let parts = text.split("/");
+        text = parts[parts.length - 1];
+    }
+
+    return text;
+}
+
+// 📊 ПОКАЗ ДАНИХ
 function show(id){
     let o=data[id];
 
@@ -171,23 +184,18 @@ function show(id){
 
     document.getElementById("result").innerHTML=`
         <h3>${o.name}</h3>
-
         <div class="price">${o.price.toLocaleString()} грн</div>
-
-        <div class="breakdown">
-            ${html}
-        </div>
+        <div class="breakdown">${html}</div>
     `;
 }
 
-// 🗺️ КАРТА ВІННИЦІ
+// 🗺️ MAP
 let map=L.map('map').setView([49.2331,28.4682],13);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
     attribution:''
 }).addTo(map);
 
-// 📍 МАРКЕРИ
 for(let id in data){
     let m=data[id];
 
@@ -196,7 +204,7 @@ for(let id in data){
     marker.on("click",()=>show(id));
 }
 
-// 📷 QR СКАНЕР
+// 📷 QR
 let scanner;
 let active=false;
 
@@ -219,12 +227,16 @@ function toggleQR(){
         { facingMode:"environment" },
         { fps:10, qrbox:250 },
         (text)=>{
-            if(data[text]){
-                show(text);
+
+            let id = extractID(text);
+
+            if(data[id]){
+                show(id);
             } else {
                 document.getElementById("result").innerHTML=
-                "❌ QR не знайдено в системі";
+                "❌ QR не знайдено: " + id;
             }
+
             toggleQR();
         }
     );
