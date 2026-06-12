@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart QR City</title>
+<title>Smart QR City | Vinnytsia</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/html5-qrcode"></script>
@@ -17,18 +17,25 @@ body{
 }
 
 .header{
-    padding:16px;
+    padding:18px;
     background:linear-gradient(135deg,#1d4ed8,#2563eb);
 }
 
+.header h2{margin:0;font-size:20px;}
+.header p{margin:5px 0 0;opacity:0.8;font-size:13px;}
+
+/* CARD */
 .card{
     max-width:520px;
     margin:12px auto;
     background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.08);
     padding:12px;
     border-radius:14px;
+    backdrop-filter: blur(8px);
 }
 
+/* BUTTON */
 button{
     width:100%;
     padding:12px;
@@ -37,58 +44,106 @@ button{
     background:#22c55e;
     color:white;
     font-size:15px;
+    cursor:pointer;
 }
 
+button:hover{
+    background:#16a34a;
+}
+
+/* RESULT CARD */
+.result{
+    padding:12px;
+    background:rgba(255,255,255,0.08);
+    border-radius:12px;
+    transition:0.3s;
+    animation:fade 0.3s ease-in-out;
+}
+
+@keyframes fade{
+    from{opacity:0; transform:translateY(5px);}
+    to{opacity:1; transform:translateY(0);}
+}
+
+/* MAP */
 #map{
-    height:320px;
+    height:340px;
     border-radius:12px;
 }
 
-.result{
-    padding:10px;
-    background:rgba(255,255,255,0.07);
-    border-radius:10px;
-    margin-top:10px;
-}
-
+/* LIST */
 .item{
-    padding:8px;
+    padding:10px;
     margin-top:6px;
     background:rgba(255,255,255,0.05);
     border-radius:10px;
     cursor:pointer;
+    transition:0.2s;
+}
+.item:hover{
+    background:rgba(255,255,255,0.12);
+    transform:scale(1.02);
 }
 
-#scanner{display:none;margin-top:10px;}
+/* SEARCH */
+input{
+    width:100%;
+    padding:10px;
+    border-radius:10px;
+    border:none;
+    margin-top:8px;
+}
+
+/* SCANNER */
+#scanner{
+    display:none;
+    margin-top:10px;
+}
+
+/* BADGE */
+.badge{
+    display:inline-block;
+    padding:4px 8px;
+    background:#2563eb;
+    border-radius:8px;
+    font-size:12px;
+}
 </style>
 </head>
 
 <body>
 
 <div class="header">
-    <h2>📲 Smart QR City</h2>
-    <p>Скануй → дивись об’єкт → карта міста</p>
+    <h2>🏛️ Smart QR City</h2>
+    <p>Вінниця — цифрова карта міської інфраструктури</p>
 </div>
 
-<!-- SCANNER -->
+<!-- 📷 QR -->
 <div class="card">
     <button onclick="toggleScanner()">📷 Сканувати QR</button>
     <div id="scanner"></div>
 </div>
 
-<!-- RESULT -->
+<!-- 📍 RESULT -->
 <div class="card">
-    <div class="result" id="result">Наведіть QR або натисніть об’єкт</div>
+    <div id="result" class="result">
+        🔎 Наведіть QR або виберіть об’єкт на карті
+    </div>
 </div>
 
-<!-- MAP -->
+<!-- 🔍 SEARCH -->
+<div class="card">
+    <input id="search" placeholder="Пошук об’єкта..." oninput="filterList()">
+</div>
+
+<!-- 🗺️ MAP -->
 <div class="card">
     <div id="map"></div>
 </div>
 
-<!-- LIST -->
+<!-- 📍 LIST -->
 <div class="card">
-    <h3>📍 Об’єкти</h3>
+    <h3>📍 Об’єкти міста</h3>
     <div id="list"></div>
 </div>
 
@@ -96,45 +151,30 @@ button{
 
 <script>
 
-// 🧠 ДАНІ (без бюджету — тільки об’єкти)
+// 🧠 ДАНІ (багато міток — як реальне місто)
 const data = {
-    bench_01:{
-        name:"🪑 Лавка",
-        info:"Парк / зона відпочинку",
-        coords:[49.2331,28.4682]
-    },
-    trash_01:{
-        name:"🗑️ Смітник",
-        info:"Комунальна інфраструктура",
-        coords:[49.2320,28.4650]
-    },
-    stop_01:{
-        name:"🚌 Зупинка",
-        info:"Громадський транспорт",
-        coords:[49.2340,28.4700]
-    },
-    light_01:{
-        name:"💡 Освітлення",
-        info:"Вуличне освітлення",
-        coords:[49.2350,28.4660]
-    },
-    park_01:{
-        name:"🌳 Парк зона",
-        info:"Зелена зона міста",
-        coords:[49.2310,28.4690]
-    }
+    bench_01:{name:"🪑 Лавка парк",info:"Центральний парк",coords:[49.2331,28.4682]},
+    bench_02:{name:"🪑 Лавка сквер",info:"Сквер Козицького",coords:[49.2340,28.4690]},
+    trash_01:{name:"🗑️ Смітник центр",info:"Центр міста",coords:[49.2325,28.4660]},
+    trash_02:{name:"🗑️ Смітник парк",info:"Парк зона",coords:[49.2350,28.4700]},
+    stop_01:{name:"🚌 Зупинка центр",info:"Головна зупинка",coords:[49.2335,28.4685]},
+    stop_02:{name:"🚌 Зупинка схід",info:"Східний район",coords:[49.2360,28.4720]},
+    stop_03:{name:"🚌 Зупинка захід",info:"Західний район",coords:[49.2315,28.4635]},
+    light_01:{name:"💡 Освітлення вул. Соборна",info:"Вуличне світло",coords:[49.2345,28.4675]},
+    park_01:{name:"🌳 Парк зона",info:"Зелена зона міста",coords:[49.2305,28.4695]}
 };
 
 // 📍 SHOW OBJECT
 function show(id){
     let o=data[id];
+
     document.getElementById("result").innerHTML=`
-        <b>${o.name}</b><br>
+        <div class="badge">${o.name}</div><br><br>
         📍 ${o.info}
     `;
 }
 
-// 🗺️ MAP (ВІННИЦЯ)
+// 🗺️ MAP CENTER VINNYTSIA
 let map=L.map('map').setView([49.2331,28.4682],14);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
@@ -143,10 +183,11 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
 
 // 📍 MANY MARKERS
 for(let id in data){
-    let m=data[id];
+    let o=data[id];
 
-    let marker=L.marker(m.coords).addTo(map);
-    marker.bindPopup(m.name);
+    let marker=L.marker(o.coords).addTo(map);
+
+    marker.bindPopup(o.name);
 
     marker.on("click",()=>show(id));
 }
@@ -154,19 +195,34 @@ for(let id in data){
 // 📍 LIST
 let list=document.getElementById("list");
 
-for(let id in data){
-    let div=document.createElement("div");
-    div.className="item";
-    div.innerText=data[id].name;
-    div.onclick=()=>show(id);
-    list.appendChild(div);
+function renderList(filter=""){
+    list.innerHTML="";
+
+    for(let id in data){
+        if(data[id].name.toLowerCase().includes(filter.toLowerCase())){
+            let div=document.createElement("div");
+            div.className="item";
+            div.innerText=data[id].name;
+            div.onclick=()=>show(id);
+            list.appendChild(div);
+        }
+    }
 }
 
-// 📷 QR SCANNER (BUTTON)
+renderList();
+
+// 🔍 SEARCH
+function filterList(){
+    let val=document.getElementById("search").value;
+    renderList(val);
+}
+
+// 📷 QR SCANNER (toggle)
 let scanner;
 let active=false;
 
 function toggleScanner(){
+
     let box=document.getElementById("scanner");
 
     if(active){
@@ -184,7 +240,12 @@ function toggleScanner(){
         { facingMode:"environment" },
         { fps:10, qrbox:250 },
         (text)=>{
-            show(text);
+            if(data[text]){
+                show(text);
+            } else {
+                document.getElementById("result").innerHTML=
+                "❌ QR не знайдено в системі";
+            }
             toggleScanner();
         }
     );
