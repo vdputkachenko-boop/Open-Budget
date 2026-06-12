@@ -35,18 +35,13 @@ body{
 /* CARD */
 .card{
     max-width:430px;
-    margin:30px auto;
+    margin:20px auto;
     background:rgba(255,255,255,0.06);
     border:1px solid rgba(255,255,255,0.08);
-    padding:22px;
+    padding:18px;
     border-radius:18px;
     backdrop-filter: blur(10px);
     box-shadow:0 10px 30px rgba(0,0,0,0.4);
-    transition:0.2s;
-}
-
-.card:hover{
-    transform:translateY(-4px);
 }
 
 /* TEXT */
@@ -56,25 +51,23 @@ body{
 }
 
 .price{
-    font-size:30px;
+    font-size:28px;
     color:#22c55e;
-    margin:14px 0;
+    margin:12px 0;
     font-weight:700;
 }
 
-/* BADGE */
 .badge{
     display:inline-block;
     padding:6px 10px;
     background:#2563eb;
     border-radius:8px;
     font-size:12px;
-    margin-bottom:10px;
 }
 
 /* INFO */
 .info{
-    margin-top:12px;
+    margin-top:10px;
     color:#cbd5e1;
     line-height:1.5;
     font-size:14px;
@@ -82,7 +75,7 @@ body{
 
 /* PROGRESS */
 .bar{
-    margin-top:15px;
+    margin-top:12px;
     height:10px;
     background:#1f2937;
     border-radius:10px;
@@ -91,8 +84,30 @@ body{
 
 .fill{
     height:100%;
-    width:70%;
+    width:75%;
     background:linear-gradient(90deg,#22c55e,#16a34a);
+}
+
+/* INPUT */
+input{
+    width:100%;
+    padding:10px;
+    border-radius:10px;
+    border:none;
+    margin-top:10px;
+    outline:none;
+}
+
+/* BUTTON */
+button{
+    width:100%;
+    margin-top:10px;
+    padding:10px;
+    border:none;
+    border-radius:10px;
+    background:#22c55e;
+    color:white;
+    cursor:pointer;
 }
 
 /* FOOTER */
@@ -100,8 +115,7 @@ body{
     text-align:center;
     font-size:12px;
     opacity:0.5;
-    margin-top:25px;
-    padding-bottom:20px;
+    margin:20px;
 }
 </style>
 </head>
@@ -113,6 +127,7 @@ body{
     <p>Райгородська громада — прозорість витрат бюджету</p>
 </div>
 
+<!-- 📊 ОБ’ЄКТ -->
 <div class="card">
     <div class="title" id="title">Завантаження...</div>
 
@@ -120,13 +135,21 @@ body{
 
     <div class="price" id="price"></div>
 
-    <!-- 🔥 новий елемент -->
-    <div>📊 Рівень прозорості об’єкта</div>
-    <div class="bar">
-        <div class="fill"></div>
-    </div>
+    <div>📊 Рівень прозорості</div>
+    <div class="bar"><div class="fill"></div></div>
 
     <div class="info" id="info"></div>
+</div>
+
+<!-- 📲 QR ГЕНЕРАТОР -->
+<div class="card">
+    <h3>📲 QR-генератор</h3>
+
+    <input id="qrInput" placeholder="Наприклад: stop_01">
+
+    <button onclick="generateQR()">Згенерувати QR</button>
+
+    <div id="qrResult" style="text-align:center;margin-top:15px;"></div>
 </div>
 
 <div class="footer">
@@ -135,41 +158,74 @@ body{
 
 <script>
 
-const params = new URLSearchParams(window.location.search);
-const id = params.get("id");
-
+// --------------------
+// 📦 ДАНІ ОБ’ЄКТІВ
+// --------------------
 const data = {
     bench_01: {
         title:"🪑 Лавка громадська",
         price:"8 000 – 12 000 грн",
         type:"Благоустрій",
-        info:"Об’єкт встановлений у рамках програми благоустрою громади. Фінансування: місцевий бюджет."
+        info:"Встановлена за кошти місцевого бюджету громади."
     },
     trash_01: {
         title:"🗑️ Смітник вуличний",
         price:"3 000 – 6 000 грн",
         type:"Комунальне господарство",
-        info:"Елемент інфраструктури для підтримки чистоти та санітарії громади."
+        info:"Елемент інфраструктури для чистоти громади."
     },
     stop_01: {
         title:"🚌 Зупинка транспорту",
         price:"60 000 – 120 000 грн",
         type:"Транспорт",
-        info:"Зупинка громадського транспорту з накриттям, освітленням та лавками."
+        info:"Зупинка громадського транспорту з накриттям."
     }
 };
 
+// --------------------
+// 📍 ЧИТАННЯ QR (id)
+// --------------------
+const params = new URLSearchParams(window.location.search);
+const id = params.get("id");
+
+// якщо нема id → показуємо демо
 let obj = data[id] || {
-    title:"❌ Об’єкт не знайдено",
+    title:"ℹ️ Оберіть об’єкт через QR",
     price:"-",
-    type:"-",
-    info:"Перевірте QR-код або ID"
+    type:"Демо режим",
+    info:"Скануйте QR-код на об’єкті громади"
 };
 
+// --------------------
+// 📄 ВІДОБРАЖЕННЯ
+// --------------------
 document.getElementById("title").innerText = obj.title;
 document.getElementById("price").innerText = obj.price;
 document.getElementById("type").innerText = obj.type;
 document.getElementById("info").innerText = obj.info;
+
+// --------------------
+// 📲 QR ГЕНЕРАТОР
+// --------------------
+function generateQR() {
+    let id = document.getElementById("qrInput").value;
+
+    if(!id){
+        alert("Введіть ID");
+        return;
+    }
+
+    let url = window.location.origin + "?id=" + id;
+
+    document.getElementById("qrResult").innerHTML = `
+        <p>🔗 Посилання:</p>
+        <div style="font-size:12px;word-break:break-all;color:#93c5fd">
+            ${url}
+        </div>
+
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${url}">
+    `;
+}
 
 </script>
 
