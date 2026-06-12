@@ -30,11 +30,11 @@ body{
     border:1px solid rgba(255,255,255,0.08);
 }
 
-/* HOME INFO */
+/* HOME TEXT */
 .home{
     font-size:14px;
-    opacity:0.9;
     line-height:1.5;
+    opacity:0.9;
 }
 
 /* BUTTON */
@@ -50,7 +50,7 @@ button{
 
 /* MAP */
 #map{
-    height:320px;
+    height:340px;
     border-radius:12px;
 }
 
@@ -89,18 +89,18 @@ button{
 <body>
 
 <div class="header">
-    <h2>🏛️ Smart QR City</h2>
+    <h2>🏛️ Smart QR City | Вінниця</h2>
 </div>
 
-<!-- 🏠 ГОЛОВНЕ МЕНЮ -->
+<!-- 🏠 ГОЛОВНА ІНФО -->
 <div class="card">
     <div class="home">
-        📲 Система прозорості міської інфраструктури<br><br>
+        📲 Інтерактивна система міської інфраструктури Вінниці<br><br>
 
-        Наведіть QR на об’єкт (лавка, смітник, зупинка)  
-        або виберіть точку на карті.<br><br>
+        Наведіть QR-код на об’єкт міста або виберіть його на карті.<br>
+        Ви одразу побачите його вартість та структуру витрат.<br><br>
 
-        💡 Ви одразу бачите вартість об’єкта та структуру витрат.
+        🗺️ Об’єкти розміщені по районах міста: центр, Вишенька, Замостя, Тяжилів.
     </div>
 </div>
 
@@ -126,67 +126,43 @@ button{
 
 <script>
 
+// 🧠 БАГАТО МІТOК ПО РАЙОНАХ ВІННИЦІ
 const data = {
-    bench_01:{
-        name:"🪑 Лавка",
-        price:9000,
-        breakdown:{
-            "Матеріали":5000,
-            "Робота":2500,
-            "Монтаж":1500
-        },
-        coords:[49.2331,28.4682]
-    },
 
-    trash_01:{
-        name:"🗑️ Смітник",
-        price:5400,
-        breakdown:{
-            "Метал":3000,
-            "Збірка":1500,
-            "Доставка":900
-        },
-        coords:[49.2320,28.4660]
-    },
+    // 🏙️ ЦЕНТР
+    bench_01:{name:"🪑 Лавка (Центр)",price:9000,breakdown:{"Матеріали":5000,"Робота":2500,"Монтаж":1500},coords:[49.2331,28.4682]},
+    trash_01:{name:"🗑️ Смітник (Центр)",price:5400,breakdown:{"Метал":3000,"Збірка":1500,"Доставка":900},coords:[49.2325,28.4660]},
+    stop_01:{name:"🚌 Зупинка (Центр)",price:85000,breakdown:{"Конструкція":50000,"Скло":20000,"Монтаж":15000},coords:[49.2340,28.4685]},
 
-    stop_01:{
-        name:"🚌 Зупинка",
-        price:85000,
-        breakdown:{
-            "Конструкція":50000,
-            "Скло":20000,
-            "Монтаж":15000
-        },
-        coords:[49.2340,28.4700]
-    },
+    // 🌳 ВИШЕНЬКА
+    bench_02:{name:"🪑 Лавка (Вишенька)",price:8800,breakdown:{"Матеріали":4800,"Робота":2500,"Монтаж":1500},coords:[49.2205,28.4480]},
+    stop_02:{name:"🚌 Зупинка (Вишенька)",price:82000,breakdown:{"Конструкція":48000,"Скло":20000,"Монтаж":14000},coords:[49.2215,28.4500]},
+    light_01:{name:"💡 Освітлення (Вишенька)",price:11000,breakdown:{"Ліхтар":6500,"Проводка":3000,"Монтаж":1500},coords:[49.2220,28.4520]},
 
-    light_01:{
-        name:"💡 Освітлення",
-        price:12000,
-        breakdown:{
-            "Ліхтар":7000,
-            "Проводка":3000,
-            "Монтаж":2000
-        },
-        coords:[49.2350,28.4660]
-    }
+    // 🚉 ЗАМОСТЯ
+    bench_03:{name:"🪑 Лавка (Замостя)",price:8700,breakdown:{"Матеріали":4700,"Робота":2500,"Монтаж":1500},coords:[49.2380,28.4820]},
+    trash_02:{name:"🗑️ Смітник (Замостя)",price:5200,breakdown:{"Метал":2800,"Збірка":1500,"Доставка":900},coords:[49.2390,28.4840]},
+    stop_03:{name:"🚌 Зупинка (Замостя)",price:83000,breakdown:{"Конструкція":49000,"Скло":20000,"Монтаж":14000},coords:[49.2400,28.4860]},
+
+    // 🏭 ТЯЖИЛІВ
+    bench_04:{name:"🪑 Лавка (Тяжилів)",price:8600,breakdown:{"Матеріали":4600,"Робота":2500,"Монтаж":1500},coords:[49.2100,28.5000]},
+    stop_04:{name:"🚌 Зупинка (Тяжилів)",price:81000,breakdown:{"Конструкція":47000,"Скло":20000,"Монтаж":14000},coords:[49.2120,28.5020]},
+    light_02:{name:"💡 Освітлення (Тяжилів)",price:11500,breakdown:{"Ліхтар":7000,"Проводка":3000,"Монтаж":1500},coords:[49.2140,28.5040]}
 };
 
-// 📊 SHOW OBJECT
+// 📊 SHOW
 function show(id){
     let o=data[id];
 
     let html="";
     for(let k in o.breakdown){
-        html += `<div>▪ ${k}: ${o.breakdown[k]} грн</div>`;
+        html += `<div>▪ ${k}: ${o.breakdown[k].toLocaleString()} грн</div>`;
     }
 
     document.getElementById("result").innerHTML=`
         <h3>${o.name}</h3>
 
-        <div class="price">
-            ${o.price.toLocaleString()} грн
-        </div>
+        <div class="price">${o.price.toLocaleString()} грн</div>
 
         <div class="breakdown">
             ${html}
@@ -194,14 +170,14 @@ function show(id){
     `;
 }
 
-// 🗺️ MAP
-let map=L.map('map').setView([49.2331,28.4682],14);
+// 🗺️ MAP (VINNYTSIA)
+let map=L.map('map').setView([49.2331,28.4682],12);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
     attribution:''
 }).addTo(map);
 
-// MARKERS
+// 📍 MARKERS
 for(let id in data){
     let m=data[id];
 
@@ -236,8 +212,7 @@ function toggleQR(){
             if(data[text]){
                 show(text);
             } else {
-                document.getElementById("result").innerHTML=
-                "❌ QR-код не знайдено";
+                document.getElementById("result").innerHTML="❌ QR не знайдено";
             }
             toggleQR();
         }
