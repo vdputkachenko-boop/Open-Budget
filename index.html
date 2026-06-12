@@ -7,6 +7,8 @@
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
+<script src="https://unpkg.com/html5-qrcode"></script>
+
 <style>
 body{
     margin:0;
@@ -15,76 +17,44 @@ body{
     color:white;
 }
 
-/* HEADER */
 .header{
-    padding:20px;
+    padding:18px;
     background:linear-gradient(135deg,#1d4ed8,#2563eb);
 }
-.header h2{margin:0;font-size:20px;}
-.header p{margin:5px 0 0;opacity:0.8;font-size:13px;}
 
-/* CARD */
 .card{
     max-width:500px;
     margin:15px auto;
     background:rgba(255,255,255,0.06);
-    border:1px solid rgba(255,255,255,0.1);
     padding:15px;
-    border-radius:14px;
+    border-radius:12px;
 }
 
-/* TEXT */
-.title{font-size:18px;font-weight:bold;}
-.price{color:#22c55e;font-size:22px;margin:10px 0;}
-.badge{display:inline-block;background:#2563eb;padding:4px 8px;border-radius:8px;font-size:12px;}
-.info{color:#cbd5e1;font-size:14px;margin-top:8px;line-height:1.4;}
-
-/* MAP */
-#map{height:200px;border-radius:10px;margin-top:10px;}
-
-/* LIST */
-.item{
-    padding:10px;
-    margin-top:8px;
+#map{
+    height:250px;
     border-radius:10px;
-    background:rgba(255,255,255,0.05);
-    cursor:pointer;
-}
-.item:hover{background:rgba(255,255,255,0.1);}
-
-/* INPUT */
-input{
-    width:100%;
-    padding:10px;
-    border-radius:10px;
-    border:none;
-    margin-top:8px;
 }
 
-/* BUTTON */
 button{
     width:100%;
     padding:10px;
-    margin-top:8px;
+    margin-top:10px;
     border:none;
     border-radius:10px;
     background:#22c55e;
     color:white;
+}
+
+#reader{
+    width:100%;
+}
+
+.item{
+    padding:10px;
+    margin-top:8px;
+    background:rgba(255,255,255,0.05);
+    border-radius:10px;
     cursor:pointer;
-}
-
-/* QR */
-.qr{
-    text-align:center;
-    margin-top:10px;
-}
-
-/* FOOTER */
-.footer{
-    text-align:center;
-    font-size:12px;
-    opacity:0.5;
-    margin:20px;
 }
 </style>
 </head>
@@ -93,130 +63,122 @@ button{
 
 <div class="header">
     <h2>🏛️ OpenBudget SMART QR</h2>
-    <p>Прозорість інфраструктури будь-якої громади Вінницької області</p>
+    <p>QR + Карта + Прозорість бюджету</p>
 </div>
 
-<!-- 📍 ОБ’ЄКТ -->
+<!-- 📷 QR SCANNER -->
 <div class="card">
-    <div class="title" id="title">Завантаження...</div>
-    <div class="badge" id="type"></div>
-    <div class="price" id="price"></div>
+    <h3>📷 Сканер QR</h3>
+    <div id="reader"></div>
+</div>
+
+<!-- 📍 INFO -->
+<div class="card">
+    <h3 id="title">Наведіть QR</h3>
     <div id="info"></div>
+    <div id="price"></div>
+</div>
+
+<!-- 🗺️ MAP -->
+<div class="card">
+    <h3>🗺️ Карта громади</h3>
     <div id="map"></div>
 </div>
 
-<!-- 📍 СПИСОК -->
+<!-- 📍 LIST -->
 <div class="card">
-    <h3>📍 Об’єкти громади</h3>
+    <h3>📍 Об’єкти</h3>
     <div id="list"></div>
-</div>
-
-<!-- 📲 QR -->
-<div class="card">
-    <h3>📲 QR генератор</h3>
-    <input id="qrInput" placeholder="stop_01 / trash_01 / bench_01">
-    <button onclick="genQR()">Створити QR</button>
-    <div class="qr" id="qr"></div>
-</div>
-
-<div class="footer">
-    Smart City Prototype | Ukraine GovTech Hackathon
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
 
-// 🧠 УНІВЕРСАЛЬНІ ДАНІ (будь-яка громада)
+// 🧠 ДАНІ (багато точок)
 const data = {
     bench_01:{
-        title:"🪑 Лавка громадська",
-        type:"Благоустрій",
+        title:"🪑 Лавка",
         price:9000,
-        breakdown:[
-            ["Матеріали",5000],
-            ["Робота",3000],
-            ["Монтаж",1000]
-        ],
-        coords:[48.95,28.65]
+        coords:[48.95,28.65],
+        info:"Благоустрій громади"
     },
-
+    bench_02:{
+        title:"🪑 Лавка парк",
+        price:9500,
+        coords:[48.951,28.651],
+        info:"Парк зона"
+    },
     trash_01:{
         title:"🗑️ Смітник",
-        type:"Комунальне",
         price:5400,
-        breakdown:[
-            ["Метал",2800],
-            ["Встановлення",1500],
-            ["Обслуговування",1100]
-        ],
-        coords:[48.96,28.66]
+        coords:[48.96,28.66],
+        info:"Комунальна інфраструктура"
     },
-
     stop_01:{
         title:"🚌 Зупинка",
-        type:"Транспорт",
         price:85000,
-        breakdown:[
-            ["Конструкція",50000],
-            ["Скло/дах",25000],
-            ["Монтаж",10000]
-        ],
-        coords:[48.94,28.64]
+        coords:[48.94,28.64],
+        info:"Транспортна зупинка"
+    },
+    stop_02:{
+        title:"🚌 Зупинка центр",
+        price:88000,
+        coords:[48.941,28.642],
+        info:"Центральна зупинка"
     }
 };
 
-// 📍 GET ID
-const params = new URLSearchParams(window.location.search);
-const id = params.get("id");
+// 📍 MAP (БАГАТО МАРКЕРІВ)
+let map = L.map('map').setView([48.95,28.65], 13);
 
-let obj = data[id] || {
-    title:"📌 Оберіть об’єкт зі списку",
-    type:"Demo",
-    price:0,
-    breakdown:[],
-    coords:[48.95,28.65]
-};
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:''
+}).addTo(map);
 
-// 📄 UI
-document.getElementById("title").innerText = obj.title;
-document.getElementById("type").innerText = obj.type;
-document.getElementById("price").innerText = "💰 " + obj.price.toLocaleString() + " грн";
+// додати всі точки
+for(let id in data){
+    let obj = data[id];
 
-// 📊 breakdown
-let html = "<h4>📊 Структура бюджету</h4>";
-obj.breakdown.forEach(i=>{
-    html += `<div>${i[0]}: ${i[1]} грн</div>`;
-});
-document.getElementById("info").innerHTML = html;
+    let marker = L.marker(obj.coords).addTo(map);
 
-// 🗺️ MAP
-let map = L.map('map').setView(obj.coords, 14);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-L.marker(obj.coords).addTo(map);
+    marker.bindPopup(obj.title);
+
+    marker.on('click',()=>{
+        showObject(id);
+    });
+}
 
 // 📍 LIST
-const list = document.getElementById("list");
-for(let k in data){
-    let div = document.createElement("div");
+let list=document.getElementById("list");
+
+for(let id in data){
+    let div=document.createElement("div");
     div.className="item";
-    div.innerText=data[k].title;
-    div.onclick=()=>window.location.href="?id="+k;
+    div.innerText=data[id].title;
+    div.onclick=()=>showObject(id);
     list.appendChild(div);
 }
 
-// 📲 QR GENERATOR
-function genQR(){
-    let val=document.getElementById("qrInput").value;
-    if(!val) return alert("Введіть ID");
-
-    let url=window.location.origin+"?id="+val;
-
-    document.getElementById("qr").innerHTML=`
-        <div style="font-size:12px;word-break:break-all">${url}</div>
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${url}">
-    `;
+// 📲 SHOW OBJECT
+function showObject(id){
+    let obj=data[id];
+    document.getElementById("title").innerText=obj.title;
+    document.getElementById("info").innerText=obj.info;
+    document.getElementById("price").innerText="💰 "+obj.price+" грн";
 }
+
+// 📷 QR SCANNER
+function startScanner(){
+    let scanner = new Html5QrcodeScanner("reader",{fps:10,qrbox:250});
+
+    scanner.render((decodedText)=>{
+        // QR = id
+        showObject(decodedText);
+    });
+}
+
+startScanner();
 
 </script>
 
