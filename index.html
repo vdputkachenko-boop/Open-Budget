@@ -29,9 +29,30 @@ body{
     padding:14px;
 }
 
-.home{
-    font-size:14px;
-    line-height:1.5;
+/* TEXT */
+.home{ font-size:14px; line-height:1.5; }
+
+.main-text{
+    font-weight:700;
+    font-size:15px;
+    margin-bottom:6px;
+}
+
+.sub-text{
+    font-size:13px;
+    opacity:0.8;
+    margin-bottom:10px;
+}
+
+.divider{
+    height:1px;
+    background:rgba(255,255,255,0.1);
+    margin:10px 0;
+}
+
+.map-hint{
+    font-size:13px;
+    font-weight:600;
     opacity:0.9;
 }
 
@@ -86,8 +107,10 @@ button{
 
 <div class="card">
     <div class="home">
-        📲 Наведи камеру на QR-код об’єкта<br>
-        і дізнайся його вартість та склад витрат
+        <div class="main-text">📲 Наведи камеру на QR-код об’єкта</div>
+        <div class="sub-text">і дізнайся його вартість та склад витрат</div>
+        <div class="divider"></div>
+        <div class="map-hint">🗺️ або вибери об’єкт на карті</div>
     </div>
 </div>
 
@@ -110,72 +133,41 @@ button{
 
 <script>
 
-// 🧠 БАЗА ДАНИХ
+// 🧠 БАЗА ДАНИХ (ВІННИЦЯ)
 const data = {
 
-    bench_01:{
-        name:"🪑 Лавка",
-        price:9000,
-        breakdown:{
-            "Матеріали":5000,
-            "Робота":2500,
-            "Монтаж":1500
-        },
-        coords:[49.2331,28.4682]
-    },
+    bench_01:{name:"🪑 Лавка (Центр)",price:9000,breakdown:{"Матеріали":5000,"Робота":2500,"Монтаж":1500},coords:[49.2331,28.4682]},
+    trash_01:{name:"🗑️ Смітник (Центр)",price:5400,breakdown:{"Метал":3000,"Збірка":1500,"Доставка":900},coords:[49.2320,28.4660]},
+    stop_01:{name:"🚌 Зупинка (Центр)",price:85000,breakdown:{"Конструкція":50000,"Скло":20000,"Монтаж":15000},coords:[49.2340,28.4700]},
+    light_01:{name:"💡 Освітлення (Центр)",price:12000,breakdown:{"Ліхтар":7000,"Проводка":3000,"Монтаж":2000},coords:[49.2350,28.4660]},
 
-    trash_01:{
-        name:"🗑️ Смітник",
-        price:5400,
-        breakdown:{
-            "Метал":3000,
-            "Збірка":1500,
-            "Доставка":900
-        },
-        coords:[49.2320,28.4660]
-    },
+    bench_02:{name:"🪑 Лавка (Замостя)",price:8800,breakdown:{"Матеріали":4800,"Робота":2600,"Монтаж":1400},coords:[49.2285,28.4470]},
+    trash_02:{name:"🗑️ Смітник (Замостя)",price:5200,breakdown:{"Метал":2800,"Збірка":1500,"Доставка":900},coords:[49.2290,28.4490]},
 
-    stop_01:{
-        name:"🚌 Зупинка",
-        price:85000,
-        breakdown:{
-            "Конструкція":50000,
-            "Скло":20000,
-            "Монтаж":15000
-        },
-        coords:[49.2340,28.4700]
-    },
+    stop_02:{name:"🚌 Зупинка (Вишенька)",price:92000,breakdown:{"Конструкція":55000,"Скло":21000,"Монтаж":16000},coords:[49.2195,28.4810]},
+    light_02:{name:"💡 Освітлення (Вишенька)",price:13000,breakdown:{"Ліхтар":7500,"Проводка":3200,"Монтаж":2300},coords:[49.2210,28.4790]},
 
-    light_01:{
-        name:"💡 Освітлення",
-        price:12000,
-        breakdown:{
-            "Ліхтар":7000,
-            "Проводка":3000,
-            "Монтаж":2000
-        },
-        coords:[49.2350,28.4660]
-    }
+    bench_03:{name:"🪑 Лавка (Академічний)",price:8700,breakdown:{"Матеріали":4700,"Робота":2500,"Монтаж":1500},coords:[49.2105,28.4320]},
+    trash_03:{name:"🗑️ Смітник (Академічний)",price:5000,breakdown:{"Метал":2700,"Збірка":1400,"Доставка":900},coords:[49.2115,28.4340]},
+
+    stop_03:{name:"🚌 Зупинка (Барське шосе)",price:88000,breakdown:{"Конструкція":52000,"Скло":20000,"Монтаж":16000},coords:[49.2030,28.4080]},
+    light_03:{name:"💡 Освітлення (Барське шосе)",price:12500,breakdown:{"Ліхтар":7200,"Проводка":3100,"Монтаж":2200},coords:[49.2045,28.4100]}
 };
 
-// 🧠 ВИТЯГ ID З БУДЬ-ЯКОГО QR
+// QR ID
 function extractID(text){
     if(!text) return null;
-
     text = text.trim();
-
     if(text.includes("http")){
         let parts = text.split("/");
         text = parts[parts.length - 1];
     }
-
     return text;
 }
 
-// 📊 ПОКАЗ ДАНИХ
+// SHOW DATA
 function show(id){
     let o=data[id];
-
     let html="";
     for(let k in o.breakdown){
         html += `<div>▪ ${k}: ${o.breakdown[k].toLocaleString()} грн</div>`;
@@ -188,27 +180,26 @@ function show(id){
     `;
 }
 
-// 🗺️ MAP
+// MAP
 let map=L.map('map').setView([49.2331,28.4682],13);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-    attribution:''
-}).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:''}).addTo(map);
 
+// MARKERS
 for(let id in data){
     let m=data[id];
 
     let marker=L.marker(m.coords).addTo(map);
     marker.bindPopup(m.name);
+
     marker.on("click",()=>show(id));
 }
 
-// 📷 QR
+// QR
 let scanner;
 let active=false;
 
 function toggleQR(){
-
     let box=document.getElementById("scanner");
 
     if(active){
@@ -226,13 +217,12 @@ function toggleQR(){
         { facingMode:"environment" },
         { fps:10, qrbox:250 },
         (text)=>{
-
             let id = extractID(text);
 
             if(data[id]){
                 show(id);
             } else {
-                document.getElementById("result").innerHTML=
+                document.getElementById("result").innerHTML =
                 "❌ QR не знайдено: " + id;
             }
 
