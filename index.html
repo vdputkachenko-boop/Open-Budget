@@ -10,53 +10,38 @@
 <style>
 body{
     margin:0;
-    font-family:-apple-system, BlinkMacSystemFont, Arial;
+    font-family:Arial, sans-serif;
     background:#0b1220;
     color:white;
 }
 
 /* HEADER */
 .header{
-    padding:26px 18px;
+    padding:22px;
     background:linear-gradient(135deg,#1d4ed8,#2563eb);
-    border-bottom-left-radius:20px;
-    border-bottom-right-radius:20px;
+    text-align:left;
 }
+.header h2{margin:0;font-size:20px;}
+.header p{margin:5px 0 0;opacity:0.8;font-size:13px;}
 
-.header h2{
-    margin:0;
-    font-size:22px;
-}
-
-.header p{
-    margin-top:6px;
-    opacity:0.85;
-    font-size:13px;
-}
-
-/* CARD */
+/* CARDS */
 .card{
-    max-width:450px;
-    margin:16px auto;
+    max-width:500px;
+    margin:15px auto;
     background:rgba(255,255,255,0.06);
-    border:1px solid rgba(255,255,255,0.08);
-    padding:16px;
-    border-radius:18px;
-    backdrop-filter: blur(10px);
+    border:1px solid rgba(255,255,255,0.1);
+    padding:15px;
+    border-radius:14px;
 }
 
 /* TEXT */
-.title{font-size:20px;font-weight:600;}
-.price{font-size:26px;color:#22c55e;margin:10px 0;font-weight:700;}
-.badge{display:inline-block;padding:5px 10px;background:#2563eb;border-radius:8px;font-size:12px;}
-.info{margin-top:10px;color:#cbd5e1;font-size:14px;line-height:1.4;}
+.title{font-size:18px;font-weight:bold;}
+.price{color:#22c55e;font-size:22px;margin:8px 0;}
+.badge{display:inline-block;background:#2563eb;padding:4px 8px;border-radius:8px;font-size:12px;}
+.info{color:#cbd5e1;font-size:14px;margin-top:8px;line-height:1.4;}
 
 /* MAP */
-#map{
-    height:200px;
-    border-radius:12px;
-    margin-top:10px;
-}
+#map{height:200px;border-radius:10px;margin-top:10px;}
 
 /* LIST */
 .item{
@@ -66,25 +51,33 @@ body{
     background:rgba(255,255,255,0.05);
     cursor:pointer;
 }
+.item:hover{background:rgba(255,255,255,0.1);}
 
-/* QR */
+/* INPUT */
 input{
     width:100%;
     padding:10px;
     border-radius:10px;
     border:none;
-    margin-top:10px;
+    margin-top:8px;
 }
 
+/* BUTTON */
 button{
     width:100%;
-    margin-top:10px;
     padding:10px;
+    margin-top:8px;
     border:none;
     border-radius:10px;
     background:#22c55e;
     color:white;
     cursor:pointer;
+}
+
+/* QR */
+.qrbox{
+    text-align:center;
+    margin-top:10px;
 }
 
 /* FOOTER */
@@ -101,7 +94,7 @@ button{
 
 <div class="header">
     <h2>🏛️ OpenBudget PRO</h2>
-    <p>Райгородська громада — прозора інфраструктура</p>
+    <p>Райгородська громада — прозора інфраструктура бюджету</p>
 </div>
 
 <!-- 📍 ОБ’ЄКТ -->
@@ -110,14 +103,113 @@ button{
     <div class="badge" id="type"></div>
     <div class="price" id="price"></div>
     <div class="info" id="info"></div>
-
     <div id="map"></div>
 </div>
 
-<!-- 📊 СПИСОК -->
+<!-- 📍 СПИСОК -->
 <div class="card">
-    <h3>📍 Всі об’єкти громади</h3>
+    <h3>📍 Об’єкти громади</h3>
     <div id="list"></div>
 </div>
 
-<!-- 📲
+<!-- 📲 QR -->
+<div class="card">
+    <h3>📲 QR генератор</h3>
+    <input id="qrInput" placeholder="наприклад: stop_01">
+    <button onclick="generateQR()">Створити QR</button>
+    <div class="qrbox" id="qr"></div>
+</div>
+
+<div class="footer">
+    Нескорені | Юрковецький ліцей
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+
+// ---------------- DATA ----------------
+const data = {
+    bench_01:{
+        title:"🪑 Лавка",
+        price:"8 000 – 12 000 грн",
+        type:"Благоустрій",
+        info:"Встановлена за бюджет громади.",
+        coords:[48.95, 28.65]
+    },
+    trash_01:{
+        title:"🗑️ Смітник",
+        price:"3 000 – 6 000 грн",
+        type:"Комунальне",
+        info:"Обслуговування громади.",
+        coords:[48.96, 28.66]
+    },
+    stop_01:{
+        title:"🚌 Зупинка",
+        price:"60 000 – 120 000 грн",
+        type:"Транспорт",
+        info:"Зупинка громадського транспорту.",
+        coords:[48.94, 28.64]
+    }
+};
+
+// ---------------- GET ID ----------------
+const params = new URLSearchParams(window.location.search);
+const id = params.get("id");
+
+let obj = data[id] || {
+    title:"ℹ️ Об’єкт не знайдено",
+    price:"-",
+    type:"Демо режим",
+    info:"Оберіть об’єкт зі списку",
+    coords:[48.95,28.65]
+};
+
+// ---------------- SHOW INFO ----------------
+document.getElementById("title").innerText = obj.title;
+document.getElementById("price").innerText = obj.price;
+document.getElementById("type").innerText = obj.type;
+document.getElementById("info").innerText = obj.info;
+
+// ---------------- MAP ----------------
+let map = L.map('map').setView(obj.coords, 14);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:''
+}).addTo(map);
+
+L.marker(obj.coords).addTo(map);
+
+// ---------------- LIST ----------------
+const list = document.getElementById("list");
+
+for(let key in data){
+    let div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = data[key].title;
+    div.onclick = () => {
+        window.location.href = "?id=" + key;
+    };
+    list.appendChild(div);
+}
+
+// ---------------- QR GENERATOR ----------------
+function generateQR(){
+    let val = document.getElementById("qrInput").value;
+
+    if(!val) return alert("Введіть ID");
+
+    let url = window.location.origin + "?id=" + val;
+
+    document.getElementById("qr").innerHTML = `
+        <div style="font-size:12px;word-break:break-all;">
+        ${url}
+        </div>
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${url}">
+    `;
+}
+
+</script>
+
+</body>
+</html>
