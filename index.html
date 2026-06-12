@@ -27,8 +27,17 @@ body{
     background:rgba(255,255,255,0.06);
     border-radius:14px;
     padding:14px;
+    border:1px solid rgba(255,255,255,0.08);
 }
 
+/* HOME INFO */
+.home{
+    font-size:14px;
+    opacity:0.9;
+    line-height:1.5;
+}
+
+/* BUTTON */
 button{
     width:100%;
     padding:12px;
@@ -39,29 +48,34 @@ button{
     font-size:15px;
 }
 
+/* MAP */
 #map{
     height:320px;
     border-radius:12px;
 }
 
+/* SCANNER */
 #scanner{
     display:none;
     margin-top:10px;
 }
 
+/* RESULT */
 .result{
     padding:14px;
     border-radius:12px;
     background:rgba(255,255,255,0.08);
 }
 
+/* PRICE */
 .price{
-    font-size:28px;
+    font-size:26px;
     font-weight:bold;
     color:#22c55e;
     margin:10px 0;
 }
 
+/* BREAKDOWN */
 .breakdown{
     margin-top:10px;
     padding:10px;
@@ -78,17 +92,32 @@ button{
     <h2>🏛️ Smart QR City</h2>
 </div>
 
+<!-- 🏠 ГОЛОВНЕ МЕНЮ -->
+<div class="card">
+    <div class="home">
+        📲 Система прозорості міської інфраструктури<br><br>
+
+        Наведіть QR на об’єкт (лавка, смітник, зупинка)  
+        або виберіть точку на карті.<br><br>
+
+        💡 Ви одразу бачите вартість об’єкта та структуру витрат.
+    </div>
+</div>
+
+<!-- QR -->
 <div class="card">
     <button onclick="toggleQR()">📷 Сканувати QR</button>
     <div id="scanner"></div>
 </div>
 
+<!-- RESULT -->
 <div class="card">
     <div id="result" class="result">
-        Наведіть QR на об’єкт
+        🔎 Очікування сканування або вибору об’єкта
     </div>
 </div>
 
+<!-- MAP -->
 <div class="card">
     <div id="map"></div>
 </div>
@@ -143,13 +172,13 @@ const data = {
     }
 };
 
+// 📊 SHOW OBJECT
 function show(id){
     let o=data[id];
 
     let html="";
-
     for(let k in o.breakdown){
-        html += `<div>▪ ${k}: ${o.breakdown[k].toLocaleString()} грн</div>`;
+        html += `<div>▪ ${k}: ${o.breakdown[k]} грн</div>`;
     }
 
     document.getElementById("result").innerHTML=`
@@ -165,12 +194,14 @@ function show(id){
     `;
 }
 
+// 🗺️ MAP
 let map=L.map('map').setView([49.2331,28.4682],14);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
     attribution:''
 }).addTo(map);
 
+// MARKERS
 for(let id in data){
     let m=data[id];
 
@@ -179,6 +210,7 @@ for(let id in data){
     marker.on("click",()=>show(id));
 }
 
+// 📷 QR
 let scanner;
 let active=false;
 
@@ -205,7 +237,7 @@ function toggleQR(){
                 show(text);
             } else {
                 document.getElementById("result").innerHTML=
-                "QR не знайдено";
+                "❌ QR-код не знайдено";
             }
             toggleQR();
         }
