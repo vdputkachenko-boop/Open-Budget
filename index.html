@@ -3,28 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OpenBudget PRO | Райгородська громада</title>
+<title>OpenBudget Smart QR</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <style>
 body{
     margin:0;
-    font-family:Arial, sans-serif;
+    font-family:Arial;
     background:#0b1220;
     color:white;
 }
 
 /* HEADER */
 .header{
-    padding:22px;
+    padding:20px;
     background:linear-gradient(135deg,#1d4ed8,#2563eb);
-    text-align:left;
 }
 .header h2{margin:0;font-size:20px;}
 .header p{margin:5px 0 0;opacity:0.8;font-size:13px;}
 
-/* CARDS */
+/* CARD */
 .card{
     max-width:500px;
     margin:15px auto;
@@ -36,7 +35,7 @@ body{
 
 /* TEXT */
 .title{font-size:18px;font-weight:bold;}
-.price{color:#22c55e;font-size:22px;margin:8px 0;}
+.price{color:#22c55e;font-size:22px;margin:10px 0;}
 .badge{display:inline-block;background:#2563eb;padding:4px 8px;border-radius:8px;font-size:12px;}
 .info{color:#cbd5e1;font-size:14px;margin-top:8px;line-height:1.4;}
 
@@ -75,7 +74,7 @@ button{
 }
 
 /* QR */
-.qrbox{
+.qr{
     text-align:center;
     margin-top:10px;
 }
@@ -93,8 +92,8 @@ button{
 <body>
 
 <div class="header">
-    <h2>🏛️ OpenBudget PRO</h2>
-    <p>Райгородська громада — прозора інфраструктура бюджету</p>
+    <h2>🏛️ OpenBudget SMART QR</h2>
+    <p>Прозорість інфраструктури будь-якої громади Вінницької області</p>
 </div>
 
 <!-- 📍 ОБ’ЄКТ -->
@@ -102,7 +101,7 @@ button{
     <div class="title" id="title">Завантаження...</div>
     <div class="badge" id="type"></div>
     <div class="price" id="price"></div>
-    <div class="info" id="info"></div>
+    <div id="info"></div>
     <div id="map"></div>
 </div>
 
@@ -115,96 +114,106 @@ button{
 <!-- 📲 QR -->
 <div class="card">
     <h3>📲 QR генератор</h3>
-    <input id="qrInput" placeholder="наприклад: stop_01">
-    <button onclick="generateQR()">Створити QR</button>
-    <div class="qrbox" id="qr"></div>
+    <input id="qrInput" placeholder="stop_01 / trash_01 / bench_01">
+    <button onclick="genQR()">Створити QR</button>
+    <div class="qr" id="qr"></div>
 </div>
 
 <div class="footer">
-    Нескорені | Юрковецький ліцей
+    Smart City Prototype | Ukraine GovTech Hackathon
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
 
-// ---------------- DATA ----------------
+// 🧠 УНІВЕРСАЛЬНІ ДАНІ (будь-яка громада)
 const data = {
     bench_01:{
-        title:"🪑 Лавка",
-        price:"8 000 – 12 000 грн",
+        title:"🪑 Лавка громадська",
         type:"Благоустрій",
-        info:"Встановлена за бюджет громади.",
-        coords:[48.95, 28.65]
+        price:9000,
+        breakdown:[
+            ["Матеріали",5000],
+            ["Робота",3000],
+            ["Монтаж",1000]
+        ],
+        coords:[48.95,28.65]
     },
+
     trash_01:{
         title:"🗑️ Смітник",
-        price:"3 000 – 6 000 грн",
         type:"Комунальне",
-        info:"Обслуговування громади.",
-        coords:[48.96, 28.66]
+        price:5400,
+        breakdown:[
+            ["Метал",2800],
+            ["Встановлення",1500],
+            ["Обслуговування",1100]
+        ],
+        coords:[48.96,28.66]
     },
+
     stop_01:{
         title:"🚌 Зупинка",
-        price:"60 000 – 120 000 грн",
         type:"Транспорт",
-        info:"Зупинка громадського транспорту.",
-        coords:[48.94, 28.64]
+        price:85000,
+        breakdown:[
+            ["Конструкція",50000],
+            ["Скло/дах",25000],
+            ["Монтаж",10000]
+        ],
+        coords:[48.94,28.64]
     }
 };
 
-// ---------------- GET ID ----------------
+// 📍 GET ID
 const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
 
 let obj = data[id] || {
-    title:"ℹ️ Об’єкт не знайдено",
-    price:"-",
-    type:"Демо режим",
-    info:"Оберіть об’єкт зі списку",
+    title:"📌 Оберіть об’єкт зі списку",
+    type:"Demo",
+    price:0,
+    breakdown:[],
     coords:[48.95,28.65]
 };
 
-// ---------------- SHOW INFO ----------------
+// 📄 UI
 document.getElementById("title").innerText = obj.title;
-document.getElementById("price").innerText = obj.price;
 document.getElementById("type").innerText = obj.type;
-document.getElementById("info").innerText = obj.info;
+document.getElementById("price").innerText = "💰 " + obj.price.toLocaleString() + " грн";
 
-// ---------------- MAP ----------------
+// 📊 breakdown
+let html = "<h4>📊 Структура бюджету</h4>";
+obj.breakdown.forEach(i=>{
+    html += `<div>${i[0]}: ${i[1]} грн</div>`;
+});
+document.getElementById("info").innerHTML = html;
+
+// 🗺️ MAP
 let map = L.map('map').setView(obj.coords, 14);
-
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-    attribution:''
-}).addTo(map);
-
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 L.marker(obj.coords).addTo(map);
 
-// ---------------- LIST ----------------
+// 📍 LIST
 const list = document.getElementById("list");
-
-for(let key in data){
+for(let k in data){
     let div = document.createElement("div");
-    div.className = "item";
-    div.innerHTML = data[key].title;
-    div.onclick = () => {
-        window.location.href = "?id=" + key;
-    };
+    div.className="item";
+    div.innerText=data[k].title;
+    div.onclick=()=>window.location.href="?id="+k;
     list.appendChild(div);
 }
 
-// ---------------- QR GENERATOR ----------------
-function generateQR(){
-    let val = document.getElementById("qrInput").value;
-
+// 📲 QR GENERATOR
+function genQR(){
+    let val=document.getElementById("qrInput").value;
     if(!val) return alert("Введіть ID");
 
-    let url = window.location.origin + "?id=" + val;
+    let url=window.location.origin+"?id="+val;
 
-    document.getElementById("qr").innerHTML = `
-        <div style="font-size:12px;word-break:break-all;">
-        ${url}
-        </div>
+    document.getElementById("qr").innerHTML=`
+        <div style="font-size:12px;word-break:break-all">${url}</div>
         <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${url}">
     `;
 }
