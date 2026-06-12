@@ -8,54 +8,100 @@
 <style>
 body{
     margin:0;
-    font-family:Arial;
+    font-family:-apple-system, BlinkMacSystemFont, Arial;
     background:#0b1220;
     color:white;
 }
 
+/* HEADER */
 .header{
-    padding:25px;
+    padding:28px 20px;
     background:linear-gradient(135deg,#1d4ed8,#2563eb);
+    border-bottom-left-radius:20px;
+    border-bottom-right-radius:20px;
 }
 
-.card{
-    max-width:420px;
-    margin:30px auto;
-    background:#111827;
-    padding:20px;
-    border-radius:16px;
-}
-
-.title{
+.header h2{
+    margin:0;
     font-size:22px;
-    margin-bottom:10px;
+}
+
+.header p{
+    margin-top:6px;
+    opacity:0.85;
+    font-size:13px;
+}
+
+/* CARD */
+.card{
+    max-width:430px;
+    margin:30px auto;
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.08);
+    padding:22px;
+    border-radius:18px;
+    backdrop-filter: blur(10px);
+    box-shadow:0 10px 30px rgba(0,0,0,0.4);
+    transition:0.2s;
+}
+
+.card:hover{
+    transform:translateY(-4px);
+}
+
+/* TEXT */
+.title{
+    font-size:20px;
+    font-weight:600;
 }
 
 .price{
-    font-size:28px;
+    font-size:30px;
     color:#22c55e;
-    margin:15px 0;
+    margin:14px 0;
+    font-weight:700;
 }
 
+/* BADGE */
 .badge{
     display:inline-block;
-    padding:5px 10px;
+    padding:6px 10px;
     background:#2563eb;
     border-radius:8px;
     font-size:12px;
+    margin-bottom:10px;
 }
 
+/* INFO */
 .info{
-    margin-top:15px;
+    margin-top:12px;
     color:#cbd5e1;
     line-height:1.5;
+    font-size:14px;
 }
 
+/* PROGRESS */
+.bar{
+    margin-top:15px;
+    height:10px;
+    background:#1f2937;
+    border-radius:10px;
+    overflow:hidden;
+}
+
+.fill{
+    height:100%;
+    width:70%;
+    background:linear-gradient(90deg,#22c55e,#16a34a);
+}
+
+/* FOOTER */
 .footer{
     text-align:center;
     font-size:12px;
-    opacity:0.6;
-    margin-top:20px;
+    opacity:0.5;
+    margin-top:25px;
+    padding-bottom:20px;
 }
 </style>
 </head>
@@ -64,18 +110,27 @@ body{
 
 <div class="header">
     <h2>🏛️ OpenBudget</h2>
-    <p>Райгородська громада — прозорість витрат</p>
+    <p>Райгородська громада — прозорість витрат бюджету</p>
 </div>
 
 <div class="card">
     <div class="title" id="title">Завантаження...</div>
-    <div class="price" id="price"></div>
+
     <div class="badge" id="type"></div>
+
+    <div class="price" id="price"></div>
+
+    <!-- 🔥 новий елемент -->
+    <div>📊 Рівень прозорості об’єкта</div>
+    <div class="bar">
+        <div class="fill"></div>
+    </div>
+
     <div class="info" id="info"></div>
 </div>
 
 <div class="footer">
-    Прототип для хакатону
+    Нескорені | Юрковецький ліцей
 </div>
 
 <script>
@@ -88,19 +143,19 @@ const data = {
         title:"🪑 Лавка громадська",
         price:"8 000 – 12 000 грн",
         type:"Благоустрій",
-        info:"Встановлена за кошти місцевого бюджету. Використовується у громадських зонах."
+        info:"Об’єкт встановлений у рамках програми благоустрою громади. Фінансування: місцевий бюджет."
     },
     trash_01: {
         title:"🗑️ Смітник вуличний",
         price:"3 000 – 6 000 грн",
         type:"Комунальне господарство",
-        info:"Об’єкт інфраструктури для підтримки чистоти громади."
+        info:"Елемент інфраструктури для підтримки чистоти та санітарії громади."
     },
     stop_01: {
         title:"🚌 Зупинка транспорту",
         price:"60 000 – 120 000 грн",
-        type:"Транспортна інфраструктура",
-        info:"Зупинка громадського транспорту з накриттям та освітленням."
+        type:"Транспорт",
+        info:"Зупинка громадського транспорту з накриттям, освітленням та лавками."
     }
 };
 
@@ -108,7 +163,7 @@ let obj = data[id] || {
     title:"❌ Об’єкт не знайдено",
     price:"-",
     type:"-",
-    info:"Перевірте QR-код"
+    info:"Перевірте QR-код або ID"
 };
 
 document.getElementById("title").innerText = obj.title;
