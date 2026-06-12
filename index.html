@@ -86,8 +86,8 @@ button{
 
 <div class="card">
     <div class="home">
-        📲 QR → об’єкт міста → вартість + структура витрат<br>
-        Скануйте або виберіть на карті
+        📲 Наведи камеру на QR-код об’єкта<br>
+        і дізнайся його вартість та склад витрат
     </div>
 </div>
 
@@ -164,7 +164,6 @@ function extractID(text){
 
     text = text.trim();
 
-    // якщо це URL → беремо останній сегмент
     if(text.includes("http")){
         let parts = text.split("/");
         text = parts[parts.length - 1];
