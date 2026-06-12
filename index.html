@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart QR City</title>
+<title>Smart QR Budget City</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/html5-qrcode"></script>
@@ -27,7 +27,6 @@ body{
     background:rgba(255,255,255,0.06);
     border-radius:14px;
     padding:14px;
-    border:1px solid rgba(255,255,255,0.08);
 }
 
 button{
@@ -38,6 +37,7 @@ button{
     background:#22c55e;
     color:white;
     font-size:15px;
+    cursor:pointer;
 }
 
 #map{
@@ -45,50 +45,42 @@ button{
     border-radius:12px;
 }
 
-/* QR */
-#scanner{
-    display:none;
-    margin-top:10px;
-}
-
-/* RESULT */
 .result{
     padding:14px;
     border-radius:12px;
     background:rgba(255,255,255,0.08);
-    animation:fade 0.3s ease-in-out;
+    animation:fade 0.2s ease-in-out;
 }
 
 @keyframes fade{
-    from{opacity:0; transform:translateY(10px);}
-    to{opacity:1; transform:translateY(0);}
+    from{opacity:0; transform:scale(0.98);}
+    to{opacity:1; transform:scale(1);}
 }
 
-/* BADGE */
-.badge{
-    display:inline-block;
-    padding:4px 8px;
-    background:#2563eb;
-    border-radius:8px;
-    font-size:12px;
+.price{
+    font-size:26px;
+    font-weight:bold;
+    color:#22c55e;
+    margin:10px 0;
 }
 
-/* IMPACT */
-.impact{
+.breakdown{
     margin-top:10px;
     padding:10px;
     border-radius:10px;
-    background:rgba(34,197,94,0.15);
-    border:1px solid rgba(34,197,94,0.3);
+    background:rgba(255,255,255,0.05);
+    font-size:14px;
 }
+
+#scanner{display:none;margin-top:10px;}
 </style>
 </head>
 
 <body>
 
 <div class="header">
-    <h2>🏛️ Smart QR City</h2>
-    <p>Наведи камеру → отримай повну історію об’єкта</p>
+    <h2>🏛️ Smart QR Budget City</h2>
+    <p>Наведи камеру → побач вартість об’єкта</p>
 </div>
 
 <!-- QR -->
@@ -100,7 +92,7 @@ button{
 <!-- RESULT -->
 <div class="card">
     <div id="result" class="result">
-        🔎 Наведіть QR-код на об’єкт міської інфраструктури
+        🔎 Наведіть QR на об’єкт (лавка, смітник, зупинка)
     </div>
 </div>
 
@@ -113,62 +105,75 @@ button{
 
 <script>
 
-// 🧠 ОБ’ЄКТИ (без списків, тільки логіка)
+// 🧠 ОБ’ЄКТИ (ТОЧНО ТАК, ЯК ТИ ХОЧЕШ)
 const data = {
     bench_01:{
-        name:"🪑 Лавка у парку",
-        type:"Благоустрій",
-        story:"Встановлена у 2024 році для покращення громадського простору.",
-        impact:"Підвищує комфорт мешканців та соціальну взаємодію.",
+        name:"🪑 Лавка",
+        price:9000,
+        breakdown:{
+            "Матеріали":5000,
+            "Робота":2500,
+            "Монтаж":1500
+        },
         coords:[49.2331,28.4682]
     },
 
     trash_01:{
-        name:"🗑️ Міський смітник",
-        type:"Комунальна інфраструктура",
-        story:"Елемент системи чистоти міста, регулярне оновлення кожні 5 років.",
-        impact:"Зменшує забруднення міського простору.",
+        name:"🗑️ Смітник",
+        price:5400,
+        breakdown:{
+            "Метал":3000,
+            "Збірка":1500,
+            "Доставка":900
+        },
         coords:[49.2320,28.4660]
     },
 
     stop_01:{
-        name:"🚌 Автобусна зупинка",
-        type:"Транспорт",
-        story:"Забезпечує доступ до громадського транспорту у густонаселеному районі.",
-        impact:"Покращує мобільність мешканців міста.",
+        name:"🚌 Зупинка",
+        price:85000,
+        breakdown:{
+            "Конструкція":50000,
+            "Скло":20000,
+            "Монтаж":15000
+        },
         coords:[49.2340,28.4700]
     },
 
     light_01:{
-        name:"💡 Вуличне освітлення",
-        type:"Інфраструктура",
-        story:"Система нічного освітлення головних вулиць міста.",
-        impact:"Підвищує безпеку в темний час доби.",
+        name:"💡 Освітлення",
+        price:12000,
+        breakdown:{
+            "Ліхтар":7000,
+            "Проводка":3000,
+            "Монтаж":2000
+        },
         coords:[49.2350,28.4660]
     }
 };
 
-// 📍 SHOW OBJECT (ГОЛОВНА ФІШКА)
+// 📊 SHOW OBJECT (ГОЛОВНА ЛОГІКА)
 function show(id){
     let o=data[id];
 
+    let breakdownHTML="";
+    for(let k in o.breakdown){
+        breakdownHTML+=`<div>${k}: ${o.breakdown[k]} грн</div>`;
+    }
+
     document.getElementById("result").innerHTML=`
-        <div class="badge">${o.type}</div>
         <h3>${o.name}</h3>
 
-        📖 <b>Історія об’єкта:</b><br>
-        ${o.story}<br><br>
+        💰 <div class="price">${o.price.toLocaleString()} грн</div>
 
-        🌍 <b>Вплив на громаду:</b><br>
-        ${o.impact}
-
-        <div class="impact">
-            💡 Цей об’єкт є частиною міської інфраструктури та відображає принцип прозорості міста.
+        📊 <b>Структура вартості:</b>
+        <div class="breakdown">
+            ${breakdownHTML}
         </div>
     `;
 }
 
-// 🗺️ MAP (Вінниця центр)
+// 🗺️ MAP
 let map=L.map('map').setView([49.2331,28.4682],14);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
@@ -211,7 +216,7 @@ function toggleQR(){
                 show(text);
             } else {
                 document.getElementById("result").innerHTML=
-                "❌ QR-код не знайдено в системі";
+                "❌ QR не знайдено";
             }
             toggleQR();
         }
