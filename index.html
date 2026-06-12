@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart QR Budget City</title>
+<title>Smart QR City</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/html5-qrcode"></script>
@@ -17,7 +17,7 @@ body{
 }
 
 .header{
-    padding:18px;
+    padding:16px;
     background:linear-gradient(135deg,#1d4ed8,#2563eb);
 }
 
@@ -37,28 +37,26 @@ button{
     background:#22c55e;
     color:white;
     font-size:15px;
-    cursor:pointer;
 }
 
 #map{
-    height:300px;
+    height:320px;
     border-radius:12px;
+}
+
+#scanner{
+    display:none;
+    margin-top:10px;
 }
 
 .result{
     padding:14px;
     border-radius:12px;
     background:rgba(255,255,255,0.08);
-    animation:fade 0.2s ease-in-out;
-}
-
-@keyframes fade{
-    from{opacity:0; transform:scale(0.98);}
-    to{opacity:1; transform:scale(1);}
 }
 
 .price{
-    font-size:26px;
+    font-size:28px;
     font-weight:bold;
     color:#22c55e;
     margin:10px 0;
@@ -71,32 +69,26 @@ button{
     background:rgba(255,255,255,0.05);
     font-size:14px;
 }
-
-#scanner{display:none;margin-top:10px;}
 </style>
 </head>
 
 <body>
 
 <div class="header">
-    <h2>🏛️ Smart QR Budget City</h2>
-    <p>Наведи камеру → побач вартість об’єкта</p>
+    <h2>🏛️ Smart QR City</h2>
 </div>
 
-<!-- QR -->
 <div class="card">
     <button onclick="toggleQR()">📷 Сканувати QR</button>
     <div id="scanner"></div>
 </div>
 
-<!-- RESULT -->
 <div class="card">
     <div id="result" class="result">
-        🔎 Наведіть QR на об’єкт (лавка, смітник, зупинка)
+        Наведіть QR на об’єкт
     </div>
 </div>
 
-<!-- MAP -->
 <div class="card">
     <div id="map"></div>
 </div>
@@ -105,7 +97,6 @@ button{
 
 <script>
 
-// 🧠 ОБ’ЄКТИ (ТОЧНО ТАК, ЯК ТИ ХОЧЕШ)
 const data = {
     bench_01:{
         name:"🪑 Лавка",
@@ -152,35 +143,34 @@ const data = {
     }
 };
 
-// 📊 SHOW OBJECT (ГОЛОВНА ЛОГІКА)
 function show(id){
     let o=data[id];
 
-    let breakdownHTML="";
+    let html="";
+
     for(let k in o.breakdown){
-        breakdownHTML+=`<div>${k}: ${o.breakdown[k]} грн</div>`;
+        html += `<div>▪ ${k}: ${o.breakdown[k].toLocaleString()} грн</div>`;
     }
 
     document.getElementById("result").innerHTML=`
         <h3>${o.name}</h3>
 
-        💰 <div class="price">${o.price.toLocaleString()} грн</div>
+        <div class="price">
+            ${o.price.toLocaleString()} грн
+        </div>
 
-        📊 <b>Структура вартості:</b>
         <div class="breakdown">
-            ${breakdownHTML}
+            ${html}
         </div>
     `;
 }
 
-// 🗺️ MAP
 let map=L.map('map').setView([49.2331,28.4682],14);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
     attribution:''
 }).addTo(map);
 
-// 📍 MARKERS
 for(let id in data){
     let m=data[id];
 
@@ -189,7 +179,6 @@ for(let id in data){
     marker.on("click",()=>show(id));
 }
 
-// 📷 QR SCANNER
 let scanner;
 let active=false;
 
@@ -216,7 +205,7 @@ function toggleQR(){
                 show(text);
             } else {
                 document.getElementById("result").innerHTML=
-                "❌ QR не знайдено";
+                "QR не знайдено";
             }
             toggleQR();
         }
