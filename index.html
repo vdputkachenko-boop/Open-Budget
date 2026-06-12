@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenBudget | Райгородська громада</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:#0b1220;
+    color:white;
+}
+
+.header{
+    padding:25px;
+    background:linear-gradient(135deg,#1d4ed8,#2563eb);
+}
+
+.card{
+    max-width:420px;
+    margin:30px auto;
+    background:#111827;
+    padding:20px;
+    border-radius:16px;
+}
+
+.title{
+    font-size:22px;
+    margin-bottom:10px;
+}
+
+.price{
+    font-size:28px;
+    color:#22c55e;
+    margin:15px 0;
+}
+
+.badge{
+    display:inline-block;
+    padding:5px 10px;
+    background:#2563eb;
+    border-radius:8px;
+    font-size:12px;
+}
+
+.info{
+    margin-top:15px;
+    color:#cbd5e1;
+    line-height:1.5;
+}
+
+.footer{
+    text-align:center;
+    font-size:12px;
+    opacity:0.6;
+    margin-top:20px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    <h2>🏛️ OpenBudget</h2>
+    <p>Райгородська громада — прозорість витрат</p>
+</div>
+
+<div class="card">
+    <div class="title" id="title">Завантаження...</div>
+    <div class="price" id="price"></div>
+    <div class="badge" id="type"></div>
+    <div class="info" id="info"></div>
+</div>
+
+<div class="footer">
+    Прототип для хакатону
+</div>
+
+<script>
+
+const params = new URLSearchParams(window.location.search);
+const id = params.get("id");
+
+const data = {
+    bench_01: {
+        title:"🪑 Лавка громадська",
+        price:"8 000 – 12 000 грн",
+        type:"Благоустрій",
+        info:"Встановлена за кошти місцевого бюджету. Використовується у громадських зонах."
+    },
+    trash_01: {
+        title:"🗑️ Смітник вуличний",
+        price:"3 000 – 6 000 грн",
+        type:"Комунальне господарство",
+        info:"Об’єкт інфраструктури для підтримки чистоти громади."
+    },
+    stop_01: {
+        title:"🚌 Зупинка транспорту",
+        price:"60 000 – 120 000 грн",
+        type:"Транспортна інфраструктура",
+        info:"Зупинка громадського транспорту з накриттям та освітленням."
+    }
+};
+
+let obj = data[id] || {
+    title:"❌ Об’єкт не знайдено",
+    price:"-",
+    type:"-",
+    info:"Перевірте QR-код"
+};
+
+document.getElementById("title").innerText = obj.title;
+document.getElementById("price").innerText = obj.price;
+document.getElementById("type").innerText = obj.type;
+document.getElementById("info").innerText = obj.info;
+
+</script>
+
+</body>
+</html>
