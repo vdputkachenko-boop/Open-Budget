@@ -3,10 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OpenBudget Smart QR</title>
+<title>OpenBudget Smart City</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <style>
@@ -17,38 +16,57 @@ body{
     color:white;
 }
 
+/* HEADER */
 .header{
     padding:18px;
     background:linear-gradient(135deg,#1d4ed8,#2563eb);
 }
+.header h2{margin:0;font-size:20px;}
+.header p{margin:5px 0 0;opacity:0.8;font-size:13px;}
 
+/* CARD */
 .card{
     max-width:500px;
-    margin:15px auto;
+    margin:12px auto;
     background:rgba(255,255,255,0.06);
-    padding:15px;
+    border:1px solid rgba(255,255,255,0.08);
+    padding:12px;
+    border-radius:14px;
+}
+
+/* BUTTON */
+button{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:12px;
+    background:#22c55e;
+    color:white;
+    font-size:15px;
+    cursor:pointer;
+}
+
+/* RESULT CARD */
+.result{
+    margin-top:10px;
+    padding:10px;
+    border-radius:12px;
+    background:rgba(255,255,255,0.08);
+}
+
+/* MAP */
+#map{
+    height:280px;
     border-radius:12px;
 }
 
-#map{
-    height:250px;
-    border-radius:10px;
-}
-
-button{
-    width:100%;
-    padding:10px;
+/* SCANNER */
+#scanner{
+    display:none;
     margin-top:10px;
-    border:none;
-    border-radius:10px;
-    background:#22c55e;
-    color:white;
 }
 
-#reader{
-    width:100%;
-}
-
+/* LIST */
 .item{
     padding:10px;
     margin-top:8px;
@@ -62,32 +80,31 @@ button{
 <body>
 
 <div class="header">
-    <h2>🏛️ OpenBudget SMART QR</h2>
-    <p>QR + Карта + Прозорість бюджету</p>
+    <h2>🏛️ OpenBudget</h2>
+    <p>Smart QR + Карта громади</p>
 </div>
 
-<!-- 📷 QR SCANNER -->
+<!-- 📷 SCANNER -->
 <div class="card">
-    <h3>📷 Сканер QR</h3>
-    <div id="reader"></div>
+    <button onclick="startScanner()">📷 Сканувати QR</button>
+    <div id="scanner"></div>
 </div>
 
-<!-- 📍 INFO -->
+<!-- 📊 RESULT -->
 <div class="card">
-    <h3 id="title">Наведіть QR</h3>
-    <div id="info"></div>
-    <div id="price"></div>
+    <div class="result" id="result">
+        Наведіть QR або виберіть об’єкт
+    </div>
 </div>
 
 <!-- 🗺️ MAP -->
 <div class="card">
-    <h3>🗺️ Карта громади</h3>
     <div id="map"></div>
 </div>
 
 <!-- 📍 LIST -->
 <div class="card">
-    <h3>📍 Об’єкти</h3>
+    <h3>📍 Об’єкти міста</h3>
     <div id="list"></div>
 </div>
 
@@ -95,58 +112,59 @@ button{
 
 <script>
 
-// 🧠 ДАНІ (багато точок)
+// 🧠 ДАНІ (місто — всі точки на карті)
 const data = {
     bench_01:{
         title:"🪑 Лавка",
         price:9000,
-        coords:[48.95,28.65],
-        info:"Благоустрій громади"
-    },
-    bench_02:{
-        title:"🪑 Лавка парк",
-        price:9500,
-        coords:[48.951,28.651],
-        info:"Парк зона"
+        coords:[48.4647,35.0462],
+        info:"Благоустрій міста"
     },
     trash_01:{
         title:"🗑️ Смітник",
         price:5400,
-        coords:[48.96,28.66],
+        coords:[48.4655,35.0500],
         info:"Комунальна інфраструктура"
     },
     stop_01:{
         title:"🚌 Зупинка",
         price:85000,
-        coords:[48.94,28.64],
-        info:"Транспортна зупинка"
+        coords:[48.4630,35.0440],
+        info:"Транспортна інфраструктура"
     },
     stop_02:{
         title:"🚌 Зупинка центр",
-        price:88000,
-        coords:[48.941,28.642],
+        price:90000,
+        coords:[48.4660,35.0480],
         info:"Центральна зупинка"
     }
 };
 
-// 📍 MAP (БАГАТО МАРКЕРІВ)
-let map = L.map('map').setView([48.95,28.65], 13);
+// 📍 RESULT
+function show(id){
+    let o=data[id];
+    if(!o) return;
+
+    document.getElementById("result").innerHTML=`
+        <b>${o.title}</b><br>
+        💰 ${o.price.toLocaleString()} грн<br>
+        📍 ${o.info}
+    `;
+}
+
+// 🗺️ MAP (центр міста)
+let map = L.map('map').setView([48.4647,35.0462], 14);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
     attribution:''
 }).addTo(map);
 
-// додати всі точки
+// 📍 MARKERS
 for(let id in data){
-    let obj = data[id];
-
-    let marker = L.marker(obj.coords).addTo(map);
-
-    marker.bindPopup(obj.title);
-
-    marker.on('click',()=>{
-        showObject(id);
-    });
+    let m=data[id];
+    let marker=L.marker(m.coords).addTo(map);
+    marker.bindPopup(m.title);
+    marker.on("click",()=>show(id));
 }
 
 // 📍 LIST
@@ -156,29 +174,37 @@ for(let id in data){
     let div=document.createElement("div");
     div.className="item";
     div.innerText=data[id].title;
-    div.onclick=()=>showObject(id);
+    div.onclick=()=>show(id);
     list.appendChild(div);
 }
 
-// 📲 SHOW OBJECT
-function showObject(id){
-    let obj=data[id];
-    document.getElementById("title").innerText=obj.title;
-    document.getElementById("info").innerText=obj.info;
-    document.getElementById("price").innerText="💰 "+obj.price+" грн";
-}
+// 📷 QR SCANNER (BUTTON CONTROL)
+let scanner;
 
-// 📷 QR SCANNER
 function startScanner(){
-    let scanner = new Html5QrcodeScanner("reader",{fps:10,qrbox:250});
+    let box=document.getElementById("scanner");
 
-    scanner.render((decodedText)=>{
-        // QR = id
-        showObject(decodedText);
-    });
+    if(scanner){
+        scanner.clear();
+        scanner=null;
+        box.style.display="none";
+        return;
+    }
+
+    box.style.display="block";
+
+    scanner = new Html5Qrcode("scanner");
+
+    scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        (text)=>{
+            show(text);
+            scanner.stop();
+            box.style.display="none";
+        }
+    );
 }
-
-startScanner();
 
 </script>
 
