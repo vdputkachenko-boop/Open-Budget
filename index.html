@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OpenBudget | Райгородська громада</title>
+<title>OpenBudget PRO | Райгородська громада</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <style>
 body{
@@ -15,7 +17,7 @@ body{
 
 /* HEADER */
 .header{
-    padding:28px 20px;
+    padding:26px 18px;
     background:linear-gradient(135deg,#1d4ed8,#2563eb);
     border-bottom-left-radius:20px;
     border-bottom-right-radius:20px;
@@ -34,71 +36,46 @@ body{
 
 /* CARD */
 .card{
-    max-width:430px;
-    margin:20px auto;
+    max-width:450px;
+    margin:16px auto;
     background:rgba(255,255,255,0.06);
     border:1px solid rgba(255,255,255,0.08);
-    padding:18px;
+    padding:16px;
     border-radius:18px;
     backdrop-filter: blur(10px);
-    box-shadow:0 10px 30px rgba(0,0,0,0.4);
 }
 
 /* TEXT */
-.title{
-    font-size:20px;
-    font-weight:600;
-}
+.title{font-size:20px;font-weight:600;}
+.price{font-size:26px;color:#22c55e;margin:10px 0;font-weight:700;}
+.badge{display:inline-block;padding:5px 10px;background:#2563eb;border-radius:8px;font-size:12px;}
+.info{margin-top:10px;color:#cbd5e1;font-size:14px;line-height:1.4;}
 
-.price{
-    font-size:28px;
-    color:#22c55e;
-    margin:12px 0;
-    font-weight:700;
-}
-
-.badge{
-    display:inline-block;
-    padding:6px 10px;
-    background:#2563eb;
-    border-radius:8px;
-    font-size:12px;
-}
-
-/* INFO */
-.info{
+/* MAP */
+#map{
+    height:200px;
+    border-radius:12px;
     margin-top:10px;
-    color:#cbd5e1;
-    line-height:1.5;
-    font-size:14px;
 }
 
-/* PROGRESS */
-.bar{
-    margin-top:12px;
-    height:10px;
-    background:#1f2937;
+/* LIST */
+.item{
+    padding:10px;
+    margin-top:8px;
     border-radius:10px;
-    overflow:hidden;
+    background:rgba(255,255,255,0.05);
+    cursor:pointer;
 }
 
-.fill{
-    height:100%;
-    width:75%;
-    background:linear-gradient(90deg,#22c55e,#16a34a);
-}
-
-/* INPUT */
+/* QR */
 input{
     width:100%;
     padding:10px;
     border-radius:10px;
     border:none;
     margin-top:10px;
-    outline:none;
 }
 
-/* BUTTON */
 button{
     width:100%;
     margin-top:10px;
@@ -123,111 +100,24 @@ button{
 <body>
 
 <div class="header">
-    <h2>🏛️ OpenBudget</h2>
-    <p>Райгородська громада — прозорість витрат бюджету</p>
+    <h2>🏛️ OpenBudget PRO</h2>
+    <p>Райгородська громада — прозора інфраструктура</p>
 </div>
 
-<!-- 📊 ОБ’ЄКТ -->
+<!-- 📍 ОБ’ЄКТ -->
 <div class="card">
     <div class="title" id="title">Завантаження...</div>
-
     <div class="badge" id="type"></div>
-
     <div class="price" id="price"></div>
-
-    <div>📊 Рівень прозорості</div>
-    <div class="bar"><div class="fill"></div></div>
-
     <div class="info" id="info"></div>
+
+    <div id="map"></div>
 </div>
 
-<!-- 📲 QR ГЕНЕРАТОР -->
+<!-- 📊 СПИСОК -->
 <div class="card">
-    <h3>📲 QR-генератор</h3>
-
-    <input id="qrInput" placeholder="Наприклад: stop_01">
-
-    <button onclick="generateQR()">Згенерувати QR</button>
-
-    <div id="qrResult" style="text-align:center;margin-top:15px;"></div>
+    <h3>📍 Всі об’єкти громади</h3>
+    <div id="list"></div>
 </div>
 
-<div class="footer">
-    Нескорені | Юрковецький ліцей
-</div>
-
-<script>
-
-// --------------------
-// 📦 ДАНІ ОБ’ЄКТІВ
-// --------------------
-const data = {
-    bench_01: {
-        title:"🪑 Лавка громадська",
-        price:"8 000 – 12 000 грн",
-        type:"Благоустрій",
-        info:"Встановлена за кошти місцевого бюджету громади."
-    },
-    trash_01: {
-        title:"🗑️ Смітник вуличний",
-        price:"3 000 – 6 000 грн",
-        type:"Комунальне господарство",
-        info:"Елемент інфраструктури для чистоти громади."
-    },
-    stop_01: {
-        title:"🚌 Зупинка транспорту",
-        price:"60 000 – 120 000 грн",
-        type:"Транспорт",
-        info:"Зупинка громадського транспорту з накриттям."
-    }
-};
-
-// --------------------
-// 📍 ЧИТАННЯ QR (id)
-// --------------------
-const params = new URLSearchParams(window.location.search);
-const id = params.get("id");
-
-// якщо нема id → показуємо демо
-let obj = data[id] || {
-    title:"ℹ️ Оберіть об’єкт через QR",
-    price:"-",
-    type:"Демо режим",
-    info:"Скануйте QR-код на об’єкті громади"
-};
-
-// --------------------
-// 📄 ВІДОБРАЖЕННЯ
-// --------------------
-document.getElementById("title").innerText = obj.title;
-document.getElementById("price").innerText = obj.price;
-document.getElementById("type").innerText = obj.type;
-document.getElementById("info").innerText = obj.info;
-
-// --------------------
-// 📲 QR ГЕНЕРАТОР
-// --------------------
-function generateQR() {
-    let id = document.getElementById("qrInput").value;
-
-    if(!id){
-        alert("Введіть ID");
-        return;
-    }
-
-    let url = window.location.origin + "?id=" + id;
-
-    document.getElementById("qrResult").innerHTML = `
-        <p>🔗 Посилання:</p>
-        <div style="font-size:12px;word-break:break-all;color:#93c5fd">
-            ${url}
-        </div>
-
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${url}">
-    `;
-}
-
-</script>
-
-</body>
-</html>
+<!-- 📲
