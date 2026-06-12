@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OpenBudget Smart City</title>
+<title>OpenBudget </title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/html5-qrcode"></script>
@@ -16,7 +16,6 @@ body{
     color:white;
 }
 
-/* HEADER */
 .header{
     padding:18px;
     background:linear-gradient(135deg,#1d4ed8,#2563eb);
@@ -24,9 +23,8 @@ body{
 .header h2{margin:0;font-size:20px;}
 .header p{margin:5px 0 0;opacity:0.8;font-size:13px;}
 
-/* CARD */
 .card{
-    max-width:500px;
+    max-width:520px;
     margin:12px auto;
     background:rgba(255,255,255,0.06);
     border:1px solid rgba(255,255,255,0.08);
@@ -34,7 +32,6 @@ body{
     border-radius:14px;
 }
 
-/* BUTTON */
 button{
     width:100%;
     padding:12px;
@@ -43,50 +40,53 @@ button{
     background:#22c55e;
     color:white;
     font-size:15px;
-    cursor:pointer;
 }
 
-/* RESULT CARD */
-.result{
-    margin-top:10px;
-    padding:10px;
-    border-radius:12px;
-    background:rgba(255,255,255,0.08);
-}
-
-/* MAP */
 #map{
-    height:280px;
+    height:320px;
     border-radius:12px;
 }
 
-/* SCANNER */
-#scanner{
-    display:none;
+.result{
+    padding:10px;
+    background:rgba(255,255,255,0.07);
+    border-radius:10px;
     margin-top:10px;
 }
 
-/* LIST */
+/* BUDGET PANEL */
+.budget{
+    line-height:1.5;
+    font-size:14px;
+    color:#cbd5e1;
+}
+
+.budget b{
+    color:white;
+}
+
 .item{
-    padding:10px;
-    margin-top:8px;
+    padding:8px;
+    margin-top:6px;
     background:rgba(255,255,255,0.05);
     border-radius:10px;
     cursor:pointer;
 }
+
+#scanner{display:none;margin-top:10px;}
 </style>
 </head>
 
 <body>
 
 <div class="header">
-    <h2>🏛️ OpenBudget</h2>
-    <p>Smart QR + Карта громади</p>
+    <h2>🏛️ OpenBudget Smart City</h2>
+    <p>Вінниця — прозора інфраструктура бюджету</p>
 </div>
 
-<!-- 📷 SCANNER -->
+<!-- 📷 QR -->
 <div class="card">
-    <button onclick="startScanner()">📷 Сканувати QR</button>
+    <button onclick="toggleScanner()">📷 Сканувати QR</button>
     <div id="scanner"></div>
 </div>
 
@@ -102,6 +102,22 @@ button{
     <div id="map"></div>
 </div>
 
+<!-- 📊 BUDGET -->
+<div class="card">
+    <h3>📊 Бюджет Вінниці (модель)</h3>
+    <div class="budget">
+        <b>Загальний бюджет інфраструктури:</b> 1 240 000 000 грн<br><br>
+
+        🚌 Транспорт: 420 000 000 грн<br>
+        🗑️ Комунальні послуги: 210 000 000 грн<br>
+        🏗️ Будівництво та ремонт: 380 000 000 грн<br>
+        🌳 Благоустрій: 150 000 000 грн<br>
+        💡 Освітлення: 80 000 000 грн<br><br>
+
+        📌 Ці дані — демонстраційна модель OpenBudget системи.
+    </div>
+</div>
+
 <!-- 📍 LIST -->
 <div class="card">
     <h3>📍 Об’єкти міста</h3>
@@ -112,39 +128,23 @@ button{
 
 <script>
 
-// 🧠 ДАНІ (місто — всі точки на карті)
+// 🧠 БАГАТО МІТOК ДЛЯ ВІННИЦІ
 const data = {
-    bench_01:{
-        title:"🪑 Лавка",
-        price:9000,
-        coords:[48.4647,35.0462],
-        info:"Благоустрій міста"
-    },
-    trash_01:{
-        title:"🗑️ Смітник",
-        price:5400,
-        coords:[48.4655,35.0500],
-        info:"Комунальна інфраструктура"
-    },
-    stop_01:{
-        title:"🚌 Зупинка",
-        price:85000,
-        coords:[48.4630,35.0440],
-        info:"Транспортна інфраструктура"
-    },
-    stop_02:{
-        title:"🚌 Зупинка центр",
-        price:90000,
-        coords:[48.4660,35.0480],
-        info:"Центральна зупинка"
-    }
+    bench_01:{title:"🪑 Лавка парк",price:9000,coords:[49.2331,28.4682],info:"Парк Центральний"},
+    bench_02:{title:"🪑 Лавка сквер",price:8800,coords:[49.2345,28.4700],info:"Сквер Козицького"},
+    trash_01:{title:"🗑️ Смітник центр",price:5400,coords:[49.2320,28.4650],info:"Центр міста"},
+    trash_02:{title:"🗑️ Смітник парк",price:5200,coords:[49.2350,28.4690],info:"Парк зона"},
+    stop_01:{title:"🚌 Зупинка Центральна",price:85000,coords:[49.2335,28.4688],info:"Головна зупинка"},
+    stop_02:{title:"🚌 Зупинка Захід",price:90000,coords:[49.2360,28.4620],info:"Західний район"},
+    stop_03:{title:"🚌 Зупинка Схід",price:88000,coords:[49.2310,28.4750],info:"Східний район"},
+    light_01:{title:"💡 Освітлення вул. Соборна",price:12000,coords:[49.2338,28.4670],info:"Вуличне освітлення"},
+    light_02:{title:"💡 Освітлення парк",price:11000,coords:[49.2348,28.4695],info:"Парк освітлення"},
+    road_01:{title:"🛣️ Ремонт дороги",price:450000,coords:[49.2325,28.4635],info:"Ремонтна ділянка"}
 };
 
-// 📍 RESULT
+// 📍 SHOW
 function show(id){
     let o=data[id];
-    if(!o) return;
-
     document.getElementById("result").innerHTML=`
         <b>${o.title}</b><br>
         💰 ${o.price.toLocaleString()} грн<br>
@@ -152,18 +152,21 @@ function show(id){
     `;
 }
 
-// 🗺️ MAP (центр міста)
-let map = L.map('map').setView([48.4647,35.0462], 14);
+// 🗺️ MAP (ВІННИЦЯ)
+let map=L.map('map').setView([49.2331,28.4682],14);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
     attribution:''
 }).addTo(map);
 
-// 📍 MARKERS
+// 📍 MANY MARKERS
 for(let id in data){
     let m=data[id];
+
     let marker=L.marker(m.coords).addTo(map);
+
     marker.bindPopup(m.title);
+
     marker.on("click",()=>show(id));
 }
 
@@ -178,32 +181,34 @@ for(let id in data){
     list.appendChild(div);
 }
 
-// 📷 QR SCANNER (BUTTON CONTROL)
+// 📷 QR SCANNER
+let scannerActive=false;
 let scanner;
 
-function startScanner(){
+function toggleScanner(){
     let box=document.getElementById("scanner");
 
-    if(scanner){
-        scanner.clear();
-        scanner=null;
+    if(scannerActive){
+        scanner.stop();
         box.style.display="none";
+        scannerActive=false;
         return;
     }
 
     box.style.display="block";
 
-    scanner = new Html5Qrcode("scanner");
+    scanner=new Html5Qrcode("scanner");
 
     scanner.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: 250 },
+        {facingMode:"environment"},
+        {fps:10,qrbox:250},
         (text)=>{
             show(text);
-            scanner.stop();
-            box.style.display="none";
+            toggleScanner();
         }
     );
+
+    scannerActive=true;
 }
 
 </script>
