@@ -163,7 +163,7 @@ function getLocation() {
       lat = pos.coords.latitude;
       lng = pos.coords.longitude;
 
-      status.innerText = "✅ Локацію отримано. Оберіть категорію.";
+      status.innerText = "✅ Локацію отримано. Оберіть категорію";
     },
     () => {
       status.innerText = "❌ Не вдалося отримати локацію";
@@ -175,7 +175,7 @@ function getLocation() {
   );
 }
 
-/* SEARCH */
+/* SEARCH (FIXED GOOGLE MAPS API MODE) */
 function search(type) {
 
   if (lat === null || lng === null) {
@@ -185,16 +185,28 @@ function search(type) {
 
   let query = "";
 
-  // 🇺🇦 правильні локальні запити
-  if (type === "ukrsib") query = "УКРСИББАНК банкомат поруч";
-  if (type === "atm") query = "банкомат поруч";
-  if (type === "cash") query = "каса cash back магазин поруч";
-  if (type === "fuel") query = "АЗС зняття готівки поруч";
+  // 🔥 стабільні запити (не перекладаються Google)
+  switch(type) {
+    case "ukrsib":
+      query = "UKRSIBBANK ATM";
+      break;
+    case "atm":
+      query = "ATM";
+      break;
+    case "cash":
+      query = "cash back store";
+      break;
+    case "fuel":
+      query = "gas station";
+      break;
+  }
 
+  // ✅ СТАБІЛЬНИЙ ФОРМАТ GOOGLE MAPS
   const url =
-    "https://www.google.com/maps/search/" +
-    encodeURIComponent(query) +
-    "/@" + lat + "," + lng + ",15z";
+    "https://www.google.com/maps/search/?api=1" +
+    "&query=" + encodeURIComponent(query) +
+    "&center=" + lat + "," + lng +
+    "&zoom=15";
 
   window.open(url, "_blank");
 }
