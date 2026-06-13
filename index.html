@@ -3,92 +3,122 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Готівка поруч</title>
+<title>Smart QR City</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/html5-qrcode"></script>
 
 <style>
 
-body {
-  margin: 0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  background: #0b1220;
-  color: white;
+/* 🌑 BASE */
+body{
+    margin:0;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    background: radial-gradient(circle at top, #0f172a, #0b1220);
+    color:#e5e7eb;
 }
 
-.header {
-  padding: 24px 18px;
-  background: linear-gradient(135deg, #1d4ed8, #2563eb);
-  border-bottom-left-radius: 20px;
-  border-bottom-right-radius: 20px;
+/* 🟦 HEADER */
+.header{
+    padding:18px 16px;
+    background: linear-gradient(135deg,#1d4ed8,#2563eb);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
 }
 
-.header h1 {
-  margin: 0;
-  font-size: 20px;
+.header h2{
+    margin:0;
+    font-size:18px;
+    font-weight:700;
+    letter-spacing:0.3px;
 }
 
-.header p {
-  margin-top: 6px;
-  font-size: 13px;
-  opacity: 0.85;
+/* 🪟 CARD */
+.card{
+    max-width:520px;
+    margin:14px auto;
+    padding:16px;
+    border-radius:16px;
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.25);
 }
 
-.container {
-  padding: 16px;
-  max-width: 520px;
-  margin: auto;
+/* 🧠 HERO TEXT */
+.hero-title{
+    font-size:15px;
+    font-weight:700;
+    margin-bottom:6px;
+    color:#ffffff;
 }
 
-.status {
-  background: rgba(255,255,255,0.06);
-  padding: 12px;
-  border-radius: 12px;
-  font-size: 13px;
-  margin-bottom: 14px;
+.hero-sub{
+    font-size:13px;
+    opacity:0.75;
+    margin-bottom:10px;
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+.hero-divider{
+    height:1px;
+    background: rgba(255,255,255,0.08);
+    margin:10px 0;
 }
 
-.card {
-  background: rgba(255,255,255,0.06);
-  border-radius: 14px;
-  padding: 16px;
-  text-align: center;
-  cursor: pointer;
-  border: 1px solid rgba(255,255,255,0.08);
-  transition: 0.2s;
+.hero-hint{
+    font-size:13px;
+    font-weight:600;
+    color:#93c5fd;
 }
 
-.card:active {
-  transform: scale(0.98);
+/* 🔘 BUTTON */
+button{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:12px;
+    background: linear-gradient(135deg,#22c55e,#16a34a);
+    color:white;
+    font-size:15px;
+    font-weight:600;
+    cursor:pointer;
 }
 
-.icon {
-  font-size: 26px;
-  margin-bottom: 6px;
+/* 🗺️ MAP */
+#map{
+    height:340px;
+    border-radius:14px;
 }
 
-.btn {
-  width: 100%;
-  margin-top: 16px;
-  padding: 14px;
-  border: none;
-  border-radius: 14px;
-  background: #22c55e;
-  color: white;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
+/* 📷 SCANNER */
+#scanner{
+    display:none;
+    margin-top:10px;
 }
 
-.footer {
-  text-align: center;
-  font-size: 11px;
-  opacity: 0.5;
-  margin-top: 18px;
+/* 📦 RESULT */
+.result{
+    padding:14px;
+    border-radius:14px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.06);
+}
+
+.result h3{
+    margin:0 0 6px 0;
+    font-size:16px;
+}
+
+.price{
+    font-size:26px;
+    font-weight:800;
+    color:#22c55e;
+    margin:10px 0;
+}
+
+.breakdown{
+    font-size:13px;
+    opacity:0.9;
+    line-height:1.6;
 }
 
 </style>
@@ -97,118 +127,127 @@ body {
 <body>
 
 <div class="header">
-  <h1>🏧 Готівка поруч</h1>
-  <p>Банкомати, Cash Back та АЗС у вашій локації</p>
+    <h2>🏛️ Smart QR City • Вінниця</h2>
 </div>
 
-<div class="container">
-
-  <div class="status" id="status">
-    📍 Натисніть кнопку для визначення місцезнаходження
-  </div>
-
-  <div class="grid">
-
-    <div class="card" onclick="search('ukrsib')">
-      <div class="icon">🏦</div>
-      УКРСИББАНК
-    </div>
-
-    <div class="card" onclick="search('atm')">
-      <div class="icon">💳</div>
-      БАНКОМАТИ
-    </div>
-
-    <div class="card" onclick="search('cash')">
-      <div class="icon">🛒</div>
-      CASH BACK
-    </div>
-
-    <div class="card" onclick="search('fuel')">
-      <div class="icon">⛽</div>
-      АЗС
-    </div>
-
-  </div>
-
-  <button class="btn" onclick="getLocation()">
-    📍 Визначити моє місцезнаходження
-  </button>
-
-  <div class="footer">
-    Cash Finder MVP
-  </div>
-
+<div class="card">
+    <div class="hero-title">📲 Скануй QR-код міського об’єкта</div>
+    <div class="hero-sub">Дізнайся реальну вартість та структуру витрат бюджету</div>
+    <div class="hero-divider"></div>
+    <div class="hero-hint">🗺️ Або вибери об’єкт прямо на карті</div>
 </div>
+
+<div class="card">
+    <button onclick="toggleQR()">📷 Сканувати QR</button>
+    <div id="scanner"></div>
+</div>
+
+<div class="card">
+    <div id="result" class="result">
+        🔎 Очікування сканування...
+    </div>
+</div>
+
+<div class="card">
+    <div id="map"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
 
-let lat = null;
-let lng = null;
+// 🧠 DATA
+const data = {
 
-/* GEOLOCATION */
-function getLocation() {
+bench_01:{name:"🪑 Лавка",price:9000,breakdown:{"Матеріали":5000,"Робота":2500,"Монтаж":1500},coords:[49.2331,28.4682]},
+trash_01:{name:"🗑️ Смітник",price:5400,breakdown:{"Метал":3000,"Збірка":1500,"Доставка":900},coords:[49.2320,28.4660]},
+stop_01:{name:"🚌 Зупинка",price:85000,breakdown:{"Конструкція":50000,"Скло":20000,"Монтаж":15000},coords:[49.2340,28.4700]},
+light_01:{name:"💡 Освітлення",price:12000,breakdown:{"Ліхтар":7000,"Проводка":3000,"Монтаж":2000},coords:[49.2350,28.4660]},
 
-  const status = document.getElementById("status");
+bench_02:{name:"🪑 Лавка (Замостя)",price:8800,breakdown:{"Матеріали":4800,"Робота":2600,"Монтаж":1400},coords:[49.2285,28.4470]},
+stop_02:{name:"🚌 Зупинка (Вишенька)",price:92000,breakdown:{"Конструкція":55000,"Скло":21000,"Монтаж":16000},coords:[49.2195,28.4810]}
 
-  if (!navigator.geolocation) {
-    status.innerText = "❌ Геолокація не підтримується";
-    return;
-  }
+};
 
-  status.innerText = "🔄 Визначаємо місцезнаходження...";
-
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      lat = pos.coords.latitude;
-      lng = pos.coords.longitude;
-
-      status.innerText = "✅ Локацію отримано. Оберіть категорію";
-    },
-    () => {
-      status.innerText = "❌ Не вдалося отримати локацію";
-    },
-    {
-      enableHighAccuracy: true,
-      timeout: 10000
-    }
-  );
+// 🔎 QR
+function extractID(text){
+    if(!text) return null;
+    return text.trim().toLowerCase();
 }
 
-/* SEARCH (FIXED GOOGLE MAPS API MODE) */
-function search(type) {
+// 📦 SHOW
+function show(id){
 
-  if (lat === null || lng === null) {
-    alert("Спочатку визначте місцезнаходження 📍");
-    return;
-  }
+    id = id.trim().toLowerCase();
 
-  let query = "";
+    let o = data[id];
 
-  // 🔥 стабільні запити (не перекладаються Google)
-  switch(type) {
-    case "ukrsib":
-      query = "UKRSIBBANK ATM";
-      break;
-    case "atm":
-      query = "ATM";
-      break;
-    case "cash":
-      query = "cash back store";
-      break;
-    case "fuel":
-      query = "gas station";
-      break;
-  }
+    if(!o){
+        document.getElementById("result").innerHTML =
+        "❌ Об’єкт не знайдено: " + id;
+        return;
+    }
 
-  // ✅ СТАБІЛЬНИЙ ФОРМАТ GOOGLE MAPS
-  const url =
-    "https://www.google.com/maps/search/?api=1" +
-    "&query=" + encodeURIComponent(query) +
-    "&center=" + lat + "," + lng +
-    "&zoom=15";
+    let html="";
+    for(let k in o.breakdown){
+        html += `▪ ${k}: ${o.breakdown[k].toLocaleString()} грн<br>`;
+    }
 
-  window.open(url, "_blank");
+    document.getElementById("result").innerHTML=`
+        <h3>${o.name}</h3>
+        <div class="price">${o.price.toLocaleString()} грн</div>
+        <div class="breakdown">${html}</div>
+    `;
+}
+
+// 🗺️ MAP
+let map=L.map('map').setView([49.2331,28.4682],13);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:''
+}).addTo(map);
+
+for(let id in data){
+    let m=data[id];
+
+    let marker=L.marker(m.coords).addTo(map);
+    marker.bindPopup(m.name);
+    marker.on("click",()=>show(id));
+}
+
+// 📷 QR
+let scanner;
+let active=false;
+
+function toggleQR(){
+
+    let box=document.getElementById("scanner");
+
+    if(active){
+        scanner.stop();
+        box.style.display="none";
+        active=false;
+        return;
+    }
+
+    box.style.display="block";
+
+    scanner=new Html5Qrcode("scanner");
+
+    scanner.start(
+        { facingMode:"environment" },
+        { fps:10, qrbox:250 },
+        (text)=>{
+            let id = extractID(text);
+            if(data[id]) show(id);
+            else document.getElementById("result").innerHTML =
+                "❌ QR не знайдено: " + id;
+
+            toggleQR();
+        }
+    );
+
+    active=true;
 }
 
 </script>
