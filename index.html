@@ -6,6 +6,7 @@
 <title>Готівка поруч</title>
 
 <style>
+
 body {
   margin: 0;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
@@ -33,6 +34,8 @@ body {
 
 .container {
   padding: 16px;
+  max-width: 520px;
+  margin: auto;
 }
 
 .status {
@@ -56,6 +59,11 @@ body {
   text-align: center;
   cursor: pointer;
   border: 1px solid rgba(255,255,255,0.08);
+  transition: 0.2s;
+}
+
+.card:active {
+  transform: scale(0.98);
 }
 
 .icon {
@@ -73,6 +81,7 @@ body {
   color: white;
   font-size: 15px;
   font-weight: 600;
+  cursor: pointer;
 }
 
 .footer {
@@ -89,13 +98,13 @@ body {
 
 <div class="header">
   <h1>🏧 Готівка поруч</h1>
-  <p>Банкомати, Cash Back та АЗС</p>
+  <p>Банкомати, Cash Back та АЗС у вашій локації</p>
 </div>
 
 <div class="container">
 
   <div class="status" id="status">
-    📍 Натисніть кнопку для визначення локації
+    📍 Натисніть кнопку для визначення місцезнаходження
   </div>
 
   <div class="grid">
@@ -123,7 +132,7 @@ body {
   </div>
 
   <button class="btn" onclick="getLocation()">
-    📍 Визначити мою локацію
+    📍 Визначити моє місцезнаходження
   </button>
 
   <div class="footer">
@@ -137,44 +146,53 @@ body {
 let lat = null;
 let lng = null;
 
+/* GEOLOCATION */
 function getLocation() {
 
   const status = document.getElementById("status");
 
   if (!navigator.geolocation) {
-    status.innerText = "Геолокація не підтримується";
+    status.innerText = "❌ Геолокація не підтримується";
     return;
   }
 
-  status.innerText = "🔄 Визначаємо локацію...";
+  status.innerText = "🔄 Визначаємо місцезнаходження...";
 
   navigator.geolocation.getCurrentPosition(
     (pos) => {
       lat = pos.coords.latitude;
       lng = pos.coords.longitude;
-      status.innerText = "✅ Локацію отримано. Оберіть категорію";
+
+      status.innerText = "✅ Локацію отримано. Оберіть категорію.";
     },
     () => {
       status.innerText = "❌ Не вдалося отримати локацію";
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000
     }
   );
 }
 
+/* SEARCH */
 function search(type) {
 
   if (lat === null || lng === null) {
-    alert("Спочатку натисніть 'Визначити мою локацію'");
+    alert("Спочатку визначте місцезнаходження 📍");
     return;
   }
 
   let query = "";
 
-  if (type === "ukrsib") query = "UKRSIBBANK ATM";
-  if (type === "atm") query = "ATM";
-  if (type === "cash") query = "cashback store";
-  if (type === "fuel") query = "gas station";
+  // 🇺🇦 правильні локальні запити
+  if (type === "ukrsib") query = "УКРСИББАНК банкомат поруч";
+  if (type === "atm") query = "банкомат поруч";
+  if (type === "cash") query = "каса cash back магазин поруч";
+  if (type === "fuel") query = "АЗС зняття готівки поруч";
 
-  const url = "https://www.google.com/maps/search/" +
+  const url =
+    "https://www.google.com/maps/search/" +
     encodeURIComponent(query) +
     "/@" + lat + "," + lng + ",15z";
 
